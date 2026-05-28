@@ -21,9 +21,147 @@ const ReportScreen = () => {
     // Estados de la UI
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showSourceSelector, setShowSourceSelector] = useState<boolean>(false);
 
-    // Referencia para ocultar el input real de tipo "file"
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    // Estados y referencias para la cámara WebRTC
+    const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+    const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+    const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    // Referencia para ocultar el selector de galería
+    const galleryInputRef = useRef<HTMLInputElement>(null);
+
+    // Detener la cámara si el componente se desmonta
+    useEffect(() => {
+        return () => {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [cameraStream]);
+
+    // El stream se asigna directamente mediante un callback ref en el elemento video
+    // para evitar desfases de renderizado asíncrono en React.
+
+    const handleStartCamera = async (deviceIdOrMode: string | 'user' | 'environment' = 'environment') => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("La cámara no está disponible en este navegador o requiere conexión segura (HTTPS/localhost). Abriendo selector de archivos...");
+            galleryInputRef.current?.click();
+            return;
+        }
+
+        // Si ya hay un stream activo, detenerlo primero antes de cambiar
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+
+        const isExplicitDeviceId = deviceIdOrMode !== 'user' && deviceIdOrMode !== 'environment';
+
+        try {
+            // Usar restricción de ID explícito o modo ideal para evitar OverconstrainedError en laptops
+            const videoConstraints: MediaTrackConstraints = isExplicitDeviceId
+                ? { deviceId: { exact: deviceIdOrMode as string } }
+                : { facingMode: { ideal: deviceIdOrMode as 'user' | 'environment' } };
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: videoConstraints
+            });
+
+            setCameraStream(stream);
+            setIsCameraActive(true);
+
+            // Una vez que obtuvimos permisos, enumeramos todas las cámaras disponibles
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            setAvailableCameras(videoDevices);
+
+            if (isExplicitDeviceId) {
+                setSelectedCameraId(deviceIdOrMode as string);
+            } else {
+                // Algoritmo de filtrado inteligente: Buscar la cámara web integrada
+                const integrated = videoDevices.find(d => {
+                    const label = d.label.toLowerCase();
+                    return (
+                        (label.includes('integrated') || 
+                         label.includes('built-in') || 
+                         label.includes('webcam') || 
+                         label.includes('facetime') || 
+                         label.includes('interna') || 
+                         label.includes('front') ||
+                         label.includes('cámara del sistema') ||
+                         label.includes('cámara de la laptop') ||
+                         label.includes('cámara frontal')) &&
+                        !label.includes('virtual') &&
+                        !label.includes('continuity') &&
+                        !label.includes('droidcam') &&
+                        !label.includes('epoccam') &&
+                        !label.includes('teléfono') &&
+                        !label.includes('phone')
+                    );
+                });
+
+                if (integrated) {
+                    setSelectedCameraId(integrated.deviceId);
+                    
+                    // Si la cámara integrada no es la que se abrió por defecto, reiniciar el stream específicamente con esa
+                    const activeTrack = stream.getVideoTracks()[0];
+                    const activeSettings = activeTrack ? activeTrack.getSettings() : null;
+                    if (activeSettings && activeSettings.deviceId !== integrated.deviceId) {
+                        stream.getTracks().forEach(track => track.stop());
+                        const newStream = await navigator.mediaDevices.getUserMedia({
+                            video: { deviceId: { exact: integrated.deviceId } }
+                        });
+                        setCameraStream(newStream);
+                    }
+                } else if (videoDevices.length > 0) {
+                    setSelectedCameraId(videoDevices[0].deviceId);
+                }
+                
+                setFacingMode(deviceIdOrMode as 'user' | 'environment');
+            }
+        } catch (err) {
+            console.warn(`No se pudo iniciar la cámara en modo ${deviceIdOrMode}, intentando cualquier cámara...`, err);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true
+                });
+                setCameraStream(stream);
+                setIsCameraActive(true);
+            } catch (finalErr) {
+                console.error("Error definitivo al iniciar la cámara:", finalErr);
+                alert("No se pudo iniciar la cámara (asegúrate de otorgar permisos). Se abrirá la galería del dispositivo.");
+                galleryInputRef.current?.click();
+            }
+        }
+    };
+
+    const stopCamera = () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            setCameraStream(null);
+        }
+        setIsCameraActive(false);
+    };
+
+    const capturePhoto = () => {
+        if (videoRef.current) {
+            const video = videoRef.current;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const base64 = canvas.toDataURL('image/jpeg');
+                setImagenBase64(base64);
+                setErrorMessage(null);
+            }
+            stopCamera();
+        }
+    };
 
     // 2. Obtener geolocalización al cargar la pantalla
     useEffect(() => {
@@ -162,17 +300,18 @@ const ReportScreen = () => {
                 <section className="flex flex-col gap-2">
                     <h3 className="font-label-md text-label-md text-on-surface font-bold">Foto de la barrera <span className="text-error">*</span></h3>
 
-                    {/* Input oculto para manejar archivos */}
+                    {/* Input oculto para galería */}
                     <input
                         type="file"
                         accept="image/*"
-                        ref={fileInputRef}
+                        ref={galleryInputRef}
                         onChange={handleImageChange}
                         className="hidden"
                     />
 
                     <button
-                        onClick={() => fileInputRef.current?.click()}
+                        type="button"
+                        onClick={() => setShowSourceSelector(true)}
                         className="w-full h-[200px] border-2 border-dashed border-primary rounded-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-target-min relative overflow-hidden"
                     >
                         {imagenBase64 ? (
@@ -181,7 +320,7 @@ const ReportScreen = () => {
                         ) : (
                             <>
                                 <span className="material-symbols-outlined text-[48px] text-primary mb-2" style={{ fontVariationSettings: "'FILL' 1" }}>photo_camera</span>
-                                <span className="font-label-md text-label-md text-primary">Toca para tomar foto</span>
+                                <span className="font-label-md text-label-md text-primary">Toca para subir foto o tomar foto</span>
                             </>
                         )}
                     </button>
@@ -283,6 +422,183 @@ const ReportScreen = () => {
                     <span>Perfil</span>
                 </a>
             </nav>
+
+            {/* Modal / Bottom Sheet para seleccionar origen de foto */}
+            {showSourceSelector && (
+                <div 
+                    className="fixed inset-0 bg-black/60 z-[100] flex items-end justify-center transition-opacity duration-300 animate-fade-in"
+                    onClick={() => setShowSourceSelector(false)}
+                >
+                    <div 
+                        className="bg-surface dark:bg-surface-container w-full max-w-md rounded-t-3xl p-6 pb-8 flex flex-col gap-4 animate-slide-up shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Drag indicator bar for bottom sheet look */}
+                        <div className="w-12 h-1.5 bg-outline-variant/60 rounded-full mx-auto mb-2" />
+
+                        <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface text-center mb-2">
+                            Seleccionar origen de foto
+                        </h3>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowSourceSelector(false);
+                                    handleStartCamera();
+                                }}
+                                className="flex items-center gap-4 w-full p-4 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-[0.98] transition-all text-left border border-outline-variant/20 focus:outline-none"
+                            >
+                                <span className="material-symbols-outlined text-[28px] text-primary p-2 bg-primary/10 rounded-full">
+                                    photo_camera
+                                </span>
+                                <div>
+                                    <p className="font-label-md text-label-md text-on-surface">Tomar foto</p>
+                                    <p className="font-label-sm text-label-sm text-on-surface-variant">Usar la cámara de tu celular</p>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowSourceSelector(false);
+                                    galleryInputRef.current?.click();
+                                }}
+                                className="flex items-center gap-4 w-full p-4 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-[0.98] transition-all text-left border border-outline-variant/20 focus:outline-none"
+                            >
+                                <span className="material-symbols-outlined text-[28px] text-secondary p-2 bg-secondary/10 rounded-full">
+                                    image
+                                </span>
+                                <div>
+                                    <p className="font-label-md text-label-md text-on-surface">Subir de la galería</p>
+                                    <p className="font-label-sm text-label-sm text-on-surface-variant">Elegir un archivo o foto existente</p>
+                                </div>
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowSourceSelector(false)}
+                            className="mt-2 w-full py-3 bg-surface-container-lowest text-outline rounded-xl font-label-md text-label-md font-bold text-center border border-outline hover:bg-surface-container transition-colors focus:outline-none"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Visor de Cámara en vivo (WebRTC) */}
+            {isCameraActive && (
+                <div className="fixed inset-0 bg-black/95 z-[110] flex flex-col justify-between items-center p-6 animate-fade-in">
+                    {/* Header */}
+                    <div className="w-full flex flex-col gap-3 mt-4 max-w-md">
+                        <div className="flex justify-between items-center text-white w-full">
+                            <h4 className="font-headline-lg-mobile text-headline-lg-mobile text-white">Tomar foto</h4>
+                            <button 
+                                type="button"
+                                onClick={stopCamera}
+                                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 active:scale-95 transition-transform"
+                            >
+                                <span className="material-symbols-outlined text-white">close</span>
+                            </button>
+                        </div>
+
+                        {/* Selector de cámara si hay más de una */}
+                        {availableCameras.length > 1 && (
+                            <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-xl border border-white/20">
+                                <span className="material-symbols-outlined text-white text-[20px]">photo_camera</span>
+                                <select
+                                    value={selectedCameraId}
+                                    onChange={(e) => {
+                                        const newId = e.target.value;
+                                        setSelectedCameraId(newId);
+                                        handleStartCamera(newId);
+                                    }}
+                                    className="bg-transparent text-white font-body-md text-sm outline-none flex-grow cursor-pointer"
+                                >
+                                    {availableCameras.map(camera => (
+                                        <option 
+                                            key={camera.deviceId} 
+                                            value={camera.deviceId}
+                                            className="bg-neutral-900 text-white"
+                                        >
+                                            {camera.label || `Cámara ${camera.deviceId.substring(0, 5)}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Visor de Video */}
+                    <div className="relative w-full max-w-md aspect-[3/4] bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl border border-white/10 my-auto flex items-center justify-center">
+                        <video 
+                            ref={(el) => {
+                                if (el) {
+                                    videoRef.current = el;
+                                    if (cameraStream && el.srcObject !== cameraStream) {
+                                        el.srcObject = cameraStream;
+                                        el.play().catch(err => {
+                                            console.warn("Autoplay de video bloqueado o falló:", err);
+                                        });
+                                    }
+                                }
+                            }}
+                            autoPlay 
+                            playsInline 
+                            muted 
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+
+                    {/* Controles del obturador y alternancia */}
+                    <div className="w-full flex justify-between items-center mb-8 max-w-md px-8">
+                        {/* Espaciador para centrar obturador */}
+                        <div className="w-12 h-12" />
+
+                        {/* Shutter Button */}
+                        <button
+                            type="button"
+                            onClick={capturePhoto}
+                            className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-105 active:scale-90 transition-transform focus:outline-none"
+                            aria-label="Capturar foto"
+                        >
+                            <div className="w-14 h-14 bg-white rounded-full" />
+                        </button>
+
+                        {/* Switch Camera Button */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const nextMode = facingMode === 'user' ? 'environment' : 'user';
+                                handleStartCamera(nextMode);
+                            }}
+                            className="w-12 h-12 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:scale-95 transition-all focus:outline-none"
+                            title="Cambiar cámara"
+                        >
+                            <span className="material-symbols-outlined text-white text-[24px]">flip_camera_ios</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Animaciones personalizadas inline para el modal */}
+            <style>{`
+                @keyframes slideUp {
+                    from { transform: translateY(100%); }
+                    to { transform: translateY(0); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                .animate-slide-up {
+                    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                .animate-fade-in {
+                    animation: fadeIn 0.2s ease-out forwards;
+                }
+            `}</style>
 
         </div>
     );
