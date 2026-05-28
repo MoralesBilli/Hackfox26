@@ -1,9 +1,9 @@
-import HomeScreen from './HomeScreen';
+import GenerarReporte from './GenerarReporte';
 
 function App() {
   return (
     <>
-      <HomeScreen />
+      <GenerarReporte />
     </>
   )
 }

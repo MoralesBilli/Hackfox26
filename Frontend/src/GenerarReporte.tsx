@@ -3,7 +3,8 @@ import type { ChangeEvent } from 'react';
 
 // 1. Interfaz exacta para el payload del backend
 interface ReportPayload {
-    Ubicacion: string;
+    latitud: number;
+    longitud: number;
     descripcion: string;
     imagen: string; // Se enviará como Base64
 }
@@ -11,6 +12,8 @@ interface ReportPayload {
 const ReportScreen = () => {
     // Estados para construir nuestro payload
     const [ubicacion, setUbicacion] = useState<string>('Obteniendo ubicación...');
+    const [latitude, setLatitude] = useState<number>(32.5149);
+    const [longitude, setLongitude] = useState<number>(-117.0382);
     const [descripcion, setDescripcion] = useState<string>('');
     const [tipoBarrera, setTipoBarrera] = useState<string>('Sin rampa'); // Para los chips
     const [imagenBase64, setImagenBase64] = useState<string>('');
@@ -27,11 +30,15 @@ const ReportScreen = () => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    setLatitude(position.coords.latitude);
+                    setLongitude(position.coords.longitude);
                     setUbicacion(`${position.coords.latitude}, ${position.coords.longitude}`);
                 },
                 (error) => {
                     console.warn("Error obteniendo ubicación:", error);
                     // Coordenadas de Tijuana por defecto si el usuario deniega el permiso
+                    setLatitude(32.5149);
+                    setLongitude(-117.0382);
                     setUbicacion("32.5149, -117.0382");
                 }
             );
@@ -54,9 +61,12 @@ const ReportScreen = () => {
         }
     };
 
-    // 4. Manejador del envío al backend (PUT)
+    // 4. Manejador del envío al backend (POST)
     const handleSubmit = async () => {
         setErrorMessage(null);
+
+        // Obtener el token (hardcodeado temporalmente para pruebas)
+        const token = localStorage.getItem('token') || "eyJhbGciOiJSUzI1NiIsImtpZCI6ImM5YTBjMWRlYWEyN2JjNjMyNTUzYmM4MWEyMmQ4NzY1MWM3MTMyY2IiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiSnVhbiBQZXJleiIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9oYWNrZm94MjYtZDdlOGMiLCJhdWQiOiJoYWNrZm94MjYtZDdlOGMiLCJhdXRoX3RpbWUiOjE3ODAwMTA3NzQsInVzZXJfaWQiOiJYTVFndlRndFlhV3NkaGpLREdseDVKU0tvRGMyIiwic3ViIjoiWE1RZ3ZUZ3RZYVdzZGhqS0RHbHg1SlNLb0RjMiIsImlhdCI6MTc4MDAxMDc3NCwiZXhwIjoxNzgwMDE0Mzc0LCJlbWFpbCI6Imp1YW4ucGVyZXpAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsianVhbi5wZXJlekBleGFtcGxlLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.eGc94Oc3CRdSLJ8WURF8tPRKS8iIX7mIZRl1QCXhSxseX1ncLWLMuqt6TgCVx5ix3rhayT18gRPYpLg94ZVrBLUYQSru0QG1Cs4-LwzUyJFHvMlhnyQdthQO9o60cMJFS2y40Xp0QHeO8L5Wk_vWtZ9zdEKsnvxvTspSnDckLwUW3hdGS5pMFtYoaGj2Vmo-8Ri8aJdyN_BksdOzy5IylKvctM51sEkUlU-aRQ6c_xSAZrujcWB4HyP7lBcFBmoWaBogaEX6J2N7xx-xop61rIY5SjLoeA9RUPzaPYYBwVvoJ5c5W7ld-tZZJk9lWuGE7_7x4COf1rr4rhWnb5_giw";
 
         // Validaciones
         if (!imagenBase64) {
@@ -74,32 +84,36 @@ const ReportScreen = () => {
         const descripcionFinal = `${tipoBarrera} - ${descripcion}`.trim();
 
         const payload: ReportPayload = {
-            Ubicacion: ubicacion,
+            latitud: latitude,
+            longitud: longitude,
             descripcion: descripcionFinal,
             imagen: imagenBase64
         };
 
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
         try {
             console.log("-----------------------------------------");
-            console.log("🚀 Enviando reporte al endpoint /crear_reporte via PUT:");
-            console.log({
-                Ubicacion: payload.Ubicacion,
-                descripcion: payload.descripcion,
-                imagen: "data:image/... (Base64 truncado para la consola)"
-            });
+            console.log(`🚀 [FRONTEND] Enviando reporte al backend (${apiUrl}/creacion_reporte):`);
+            console.log("Latitud (latitud):", payload.latitud);
+            console.log("Longitud (longitud):", payload.longitud);
+            console.log("Descripción (descripcion):", payload.descripcion);
+            console.log("Imagen (imagen - base64):", payload.imagen.substring(0, 100) + "...");
             console.log("-----------------------------------------");
 
-            // Reemplaza "http://localhost:8000" por tu URL real
-            const response = await fetch('http://localhost:8000/crear_reporte', {
-                method: 'PUT',
+            const response = await fetch(`${apiUrl}/creacion_reporte`, {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(payload)
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Error al enviar el reporte');
+                throw new Error(data.error || 'Error al enviar el reporte');
             }
 
             alert("¡Reporte enviado con éxito! Gracias por tu aporte.");
@@ -109,7 +123,7 @@ const ReportScreen = () => {
 
         } catch (error: any) {
             console.error('❌ Error:', error);
-            setErrorMessage("Hubo un problema de conexión. Inténtalo de nuevo.");
+            setErrorMessage(error.message || "Hubo un problema de conexión. Inténtalo de nuevo.");
         } finally {
             setIsLoading(false);
         }

@@ -56,8 +56,10 @@ const LoginScreen = () => {
             // Si todo sale bien, la descripción de tu API dice que devuelve los tokens y el perfil
             console.log('✅ Autenticación exitosa:', data);
 
-            // Aquí normalmente guardarías el token en localStorage o en un contexto global
-            // localStorage.setItem('accessToken', data.access_token);
+            // Guardar el token en localStorage
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
 
             alert('¡Sesión iniciada con éxito!');
 
