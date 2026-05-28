@@ -21,7 +21,8 @@ class TarjetaBase(ABC):
         pass
 
 
-class tarjetas:
+class Tarjetas(TarjetaBase):
+
     def __init__(self, reporte):
         self.reporte = reporte
 
@@ -42,4 +43,10 @@ class tarjetas:
             'fecha': self.reporte.fecha,
             'ubicacion': self.reporte.ubicacion
         }
-        
+
+class FactoryTarjetas:
+
+    @staticmethod
+    def crear_tarjeta(reporte):
+
+        return Tarjetas(reporte)
