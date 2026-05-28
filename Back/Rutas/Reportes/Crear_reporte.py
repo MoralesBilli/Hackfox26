@@ -1,12 +1,17 @@
-from flask import Blueprint,jsonify,request
+from flask import Blueprint,jsonify,request,g
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
 from datetime import datetime
-from Servicios.firebase import firestore_db
+from Servicios.firebase import firestore_db, auth
+import base64
+import uuid
+from Servicios.storage import subir_foto
+from Funciones.token_requerido import token_requerido
 
 Crear_reporte_bp= Blueprint('crear_reporte',__name__)
 
-@Crear_reporte_bp.route('/creacion_reporte',methods=['GET'])
+@Crear_reporte_bp.route('/creacion_reporte',methods=['PUT'])
+@token_requerido
 def crear_reporte():
     try:
         data = request.get_json(silent=True) or {}
@@ -14,18 +19,36 @@ def crear_reporte():
         ubicacion = data.get('ubicacion')
         descripcion = data.get('descripcion')
         imagen = request.files["imagen"]
-        uid = data.get('uid')
+        uid = g.uid
 
-        user_ref = firestore_db.collection('reportes').document(uid)
-        url_imagen = "https:"
-        user_data = {
+        if not imagen:
+            return jsonify({
+                'error': 'No se envio una imagen'
+            }), 400
+
+        # Convertir imagen a base64
+        imagen_bytes = imagen.read()
+
+        imagen_b64 = base64.b64encode(imagen_bytes).decode('utf-8')
+
+       
+        url_imagen = subir_foto(imagen_b64)
+        
+        id_reporte = str(uuid.uuid4())
+        reporte_ref = firestore_db.collection('reportes').document(id_reporte)
+
+
+       
+        reporte_data = {
             'uid': uid,
-            'fecha': fecha,
+            'fecha': fecha.strftime("%Y-%m-%d"),
+            'hora': fecha.strftime("%H:%M:%S"),
             'ubicacion': ubicacion,
             'descripcion':descripcion,
-            'url_imagen': url_imagen
+            'url_imagen': url_imagen,
+            'uid':uid
         }
-        user_ref.set(user_data)
+        reporte_ref.set(reporte_data)
 
        
         return jsonify({'mensaje':'Reporte creado con exito'}),200
