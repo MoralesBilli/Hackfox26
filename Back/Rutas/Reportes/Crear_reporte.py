@@ -11,3 +11,12 @@ def crear_reporte():
     
     except Exception as e:
         return jsonify({'error':'Error al crear el reporte'}),500
+
+@Crear_reporte_bp.route('/',methods=['GET'])
+def inicio():
+    try:
+       
+        return "Hola mundo"
+    
+    except Exception as e:
+        return jsonify({'error':'Error al crear el reporte'}),500
