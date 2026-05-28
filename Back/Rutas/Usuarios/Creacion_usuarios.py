@@ -11,22 +11,25 @@ def crear_usuario():
         # Obtener datos de la petición (JSON o Formulario)
         data = request.get_json(silent=True) or {}
         
-        # Soportar nombres de campos en español e inglés, singular y plural
-        nombre = data.get('nombres') or data.get('nombre') or request.form.get('nombres') or request.form.get('nombre')
-        apellido = data.get('apellidos') or data.get('apellido') or request.form.get('apellidos') or request.form.get('apellido')
-        correo = data.get('correo') or data.get('email') or request.form.get('correo') or request.form.get('email')
-        contrasena = data.get('contrasena') or data.get('password') or request.form.get('contrasena') or request.form.get('password')
+        
+        nombre = data.get('nombre') 
+        apellidoPa = data.get('apellidoPa') 
+        apellidoMa = data.get('apellidoMa') 
+        correo = data.get('correo') 
+        contrasena = data.get('contrasena') 
 
         # Validaciones de campos obligatorios
         missing_fields = []
         if not nombre:
             missing_fields.append('nombre/nombres')
-        if not apellido:
-            missing_fields.append('apellido/apellidos')
+        if not apellidoPa:
+            missing_fields.append('apellido_paterno')
+        if not apellidoMa:
+            missing_fields.append('apellido_materno')
         if not correo:
-            missing_fields.append('correo/email')
+            missing_fields.append('correo')
         if not contrasena:
-            missing_fields.append('contrasena/password')
+            missing_fields.append('contraseña')
 
         if missing_fields:
             return jsonify({
@@ -36,14 +39,15 @@ def crear_usuario():
 
         # Limpiar espacios
         nombre = nombre.strip()
-        apellido = apellido.strip()
+        apellidopa = apellidoPa.strip()
+        apellidoma = apellidoMa.strip()
         correo = correo.strip().lower()
 
         # 1. Crear el usuario en Firebase Authentication
         user_record = auth.create_user(
             email=correo,
             password=contrasena,
-            display_name=f"{nombre} {apellido}"
+            display_name=f"{nombre} {apellidoPa} {apellidoMa}"
         )
         uid = user_record.uid
 
@@ -52,7 +56,8 @@ def crear_usuario():
         user_data = {
             'uid': uid,
             'nombres': nombre,
-            'apellidos': apellido,
+            'apellidoPa': apellidopa,
+            'apellidoMa':apellidoma,
             'correo': correo,
             'fecha_creacion': datetime.utcnow().isoformat() + 'Z'
         }
@@ -63,7 +68,8 @@ def crear_usuario():
             'usuario': {
                 'uid': uid,
                 'nombres': nombre,
-                'apellidos': apellido,
+                'apellidopa': apellidopa,
+                'apellidoma': apellidoma,
                 'correo': correo
             }
         }), 201
