@@ -1,5 +1,5 @@
 import firebase_admin 
-from firebase_admin import credentials, db, firestore
+from firebase_admin import credentials, db, firestore, auth
 from config import FIREBASE_CREDENTIALS, FIREBASE_DB_URL
 from datetime import datetime 
 import uuid
