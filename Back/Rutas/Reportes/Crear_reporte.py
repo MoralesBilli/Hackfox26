@@ -2,6 +2,7 @@ from flask import Blueprint,jsonify,request
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
 from datetime import datetime
+from Servicios.firebase import firestore_db
 
 Crear_reporte_bp= Blueprint('crear_reporte',__name__)
 
@@ -9,12 +10,22 @@ Crear_reporte_bp= Blueprint('crear_reporte',__name__)
 def crear_reporte():
     try:
         data = request.get_json(silent=True) or {}
-        fecha = data.get('fecha')
+        fecha = datetime.now()
         ubicacion = data.get('ubicacion')
         descripcion = data.get('descripcion')
         imagen = request.files["imagen"]
-        usuario = data.get('uid')
+        uid = data.get('uid')
 
+        user_ref = firestore_db.collection('reportes').document(uid)
+        url_imagen = "https:"
+        user_data = {
+            'uid': uid,
+            'fecha': fecha,
+            'ubicacion': ubicacion,
+            'descripcion':descripcion,
+            'url_imagen': url_imagen
+        }
+        user_ref.set(user_data)
 
        
         return jsonify({'mensaje':'Reporte creado con exito'}),200
