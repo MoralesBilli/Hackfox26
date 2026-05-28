@@ -1,3 +1,7 @@
 import os
 
 API_GEMINI = os.getenv('API_GEMINI')
+
+FIREBASE_CREDENTIALS = os.getenv('FIREBASE_CREDENTIALS')
+
+FIREBASE_DB_URL = os.getenv('FIREBASE_DB_URL')
