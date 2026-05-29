@@ -10,6 +10,7 @@ interface FormData {
     contrasena: string;
     confirmarContrasena: string;
 }
+//hora
 
 const RegistroScreen = () => {
     // 2. Le decimos a useState que use nuestra interfaz FormData
