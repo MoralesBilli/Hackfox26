@@ -16,17 +16,23 @@ const ProfileScreen = ({ onNavigate }: any) => {
         <div className="bg-surface text-on-surface font-body-md text-body-md antialiased md:max-w-[1024px] md:mx-auto relative min-h-screen pb-20">
 
             {/* TopAppBar */}
-            <header className="flex items-center px-4 h-14 w-full z-40 sticky top-0 bg-primary text-on-primary">
-                <button
-                    aria-label="Volver"
-                    className="w-12 h-12 flex items-center justify-center hover:opacity-90 active:scale-95 transition-transform -ml-2 mr-2"
-                    onClick={() => onNavigate('home')}
-                >
-                    <span className="material-symbols-outlined text-on-primary">arrow_back</span>
-                </button>
-                <h1 className="font-app-title text-app-title text-on-primary flex-1 truncate">
-                    Tijuana Sin Barreras
-                </h1>
+            <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
+                            <img alt="Logo App" className="w-full h-full object-cover" src="src\assets\Sin nombre.png" />
+                        </div>
+                        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
+                            Tijuana Sin Barreras
+                        </h1>
+                    </div>
+                    <button 
+                        onClick={() => onNavigate && onNavigate('profile')}
+                        className="text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20"
+                    >
+                        <span className="material-symbols-outlined">notifications</span>
+                    </button>
+                </div>
             </header>
 
             {/* Main Content Canvas */}
@@ -183,6 +189,32 @@ const ProfileScreen = ({ onNavigate }: any) => {
                     <span className="font-label-sm text-label-sm">Perfil</span>
                 </button>
 
+            </nav>
+            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">
+                <button 
+                    onClick={() => onNavigate && onNavigate('home')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">home</span>
+                </button>
+                <button 
+                    onClick={() => onNavigate && onNavigate('map')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">explore</span>
+                </button>
+                <button 
+                    onClick={() => onNavigate && onNavigate('report')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">add_circle</span>
+                </button>
+                <button 
+                    onClick={() => onNavigate && onNavigate('profile')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">person</span>
+                </button>
             </nav>
 
         </div>

@@ -343,13 +343,23 @@ const ReportScreen = ({ onNavigate }: any) => {
         <div className="bg-background text-on-background antialiased flex flex-col h-screen overflow-hidden">
 
             {/* TopAppBar */}
-            <header className="flex items-center px-4 h-14 w-full z-40 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container docked full-width top-0 flat no shadows flex-shrink-0">
-                <button onClick={() => onNavigate('home')} aria-label="Volver" className="flex items-center justify-center w-12 h-12 mr-2 hover:opacity-90 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-                </button>
-                <h1 className="font-headline-lg-mobile text-headline-lg-mobile flex-grow text-on-primary font-app-title text-app-title">
-                    Tijuana Sin Barreras
-                </h1>
+            <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
+                            <img alt="Logo App" className="w-full h-full object-cover" src="src\assets\Sin nombre.png" />
+                        </div>
+                        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
+                            Tijuana Sin Barreras
+                        </h1>
+                    </div>
+                    <button 
+                        onClick={() => onNavigate && onNavigate('profile')}
+                        className="text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20"
+                    >
+                        <span className="material-symbols-outlined">notifications</span>
+                    </button>
+                </div>
             </header>
 
             {/* Main Scrollable Content */}
@@ -384,7 +394,7 @@ const ReportScreen = ({ onNavigate }: any) => {
                     <button
                         type="button"
                         onClick={() => setShowSourceSelector(true)}
-                        className="w-full h-[200px] border-2 border-dashed border-primary rounded-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-target-min relative overflow-hidden"
+                        className="w-full max-w-2xl mx-auto h-[300px] border-2 border-dashed border-primary rounded-xl flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-target-min relative overflow-hidden"
                     >
                         {imagenBase64 ? (
                             // Vista previa de la imagen si ya se seleccionó una
