@@ -27,6 +27,20 @@ def crear_reporte():
         imagen_input = data.get('imagen') or data.get('imagen_b64') or data.get('foto')
         uid = g.uid
 
+        # Imprimir logs de datos recibidos en el servidor
+        print("-----------------------------------------")
+        print("📥 [BACKEND] Datos recibidos para creación de reporte:")
+        print("Latitud:", latitud)
+        print("Longitud:", longitud)
+        print("Descripción usuario:", descripcion_usuario)
+        print("UID del usuario logueado:", uid)
+        if isinstance(imagen_input, str):
+            print("Imagen (longitud):", len(imagen_input))
+            print("Imagen (comienzo):", imagen_input[:100] + "...")
+        else:
+            print("Imagen (tipo):", type(imagen_input))
+        print("-----------------------------------------")
+
         if not imagen_input:
             return jsonify({'error': 'No se envió ninguna imagen (URL o base64)'}), 400
 

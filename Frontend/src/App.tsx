@@ -1,9 +1,9 @@
-import ResultadoRuta from './ResultadoRuta';
+import HomeScreen from './HomeScreen';
 
 function App() {
   return (
     <>
-      <ResultadoRuta />
+      <HomeScreen />
     </>
   )
 }
