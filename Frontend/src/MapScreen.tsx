@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+
+import React, {
+    useEffect,
+    useMemo,
+    useState
+} from 'react';
+
 import {
     CircleMarker,
     MapContainer,
@@ -9,9 +15,15 @@ import {
     useMap
 } from 'react-leaflet';
 
-import L, { type LatLngTuple } from 'leaflet';
+import L, {
+    type LatLngTuple
+} from 'leaflet';
+
 import 'leaflet/dist/leaflet.css';
 
+// ======================================================
+// TYPES
+// ======================================================
 
 type RoutePlan = {
     coordinates: LatLngTuple[];
@@ -19,32 +31,84 @@ type RoutePlan = {
     durationMin: number;
 };
 
-const DEFAULT_LOCATION: LatLngTuple = [32.5338, -117.0373];
+type SearchResult = {
+    name: string;
+    lat: number;
+    lon: number;
+};
 
+// ======================================================
+// DEFAULT LOCATION
+// ======================================================
+
+const DEFAULT_LOCATION: LatLngTuple = [
+    32.5338,
+    -117.0373
+];
+
+// ======================================================
+// FLY TO USER
+// ======================================================
 
 function FlyToUser({
     location
 }: {
     location: LatLngTuple | null;
 }) {
+
     const map = useMap();
 
     useEffect(() => {
+
         if (location) {
+
             map.flyTo(location, 18, {
                 duration: 1.5
             });
+
         }
+
     }, [location]);
 
     return null;
 }
 
+// ======================================================
+// FLY TO PLACE
+// ======================================================
+
+function FlyToPlace({
+    location
+}: {
+    location: LatLngTuple | null;
+}) {
+
+    const map = useMap();
+
+    useEffect(() => {
+
+        if (location) {
+
+            map.flyTo(location, 16, {
+                duration: 1.5
+            });
+
+        }
+
+    }, [location]);
+
+    return null;
+}
+
+// ======================================================
+// COMPONENT
+// ======================================================
+
 const MapScreen = () => {
 
-    // =========================
+    // ======================================================
     // USER LOCATION
-    // =========================
+    // ======================================================
 
     const [userLocation, setUserLocation] =
         useState<LatLngTuple | null>(null);
@@ -58,32 +122,51 @@ const MapScreen = () => {
     const [locationError, setLocationError] =
         useState('');
 
-    // =========================
+    // ======================================================
+    // SEARCH
+    // ======================================================
+
+    const [search, setSearch] =
+        useState('');
+
+    const [searchResults, setSearchResults] =
+        useState<SearchResult[]>([]);
+
+    const [selectedPlace, setSelectedPlace] =
+        useState<LatLngTuple | null>(null);
+
+    // ======================================================
     // ROUTE
-    // =========================
+    // ======================================================
 
     const [route, setRoute] =
         useState<RoutePlan | null>(null);
 
-    // =========================
-    // GET LOCATION
-    // =========================
+    // ======================================================
+    // GET CURRENT LOCATION
+    // ======================================================
 
     const getCurrentLocation = () => {
 
         setLoadingLocation(true);
+
         setLocationError('');
 
         navigator.geolocation.getCurrentPosition(
 
             (position) => {
 
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
+                const lat =
+                    position.coords.latitude;
+
+                const lng =
+                    position.coords.longitude;
 
                 setUserLocation([lat, lng]);
 
-                setAccuracy(position.coords.accuracy);
+                setAccuracy(
+                    position.coords.accuracy
+                );
 
                 setLoadingLocation(false);
             },
@@ -92,14 +175,21 @@ const MapScreen = () => {
 
                 console.error(error);
 
-                if (error.code === error.PERMISSION_DENIED) {
+                if (
+                    error.code ===
+                    error.PERMISSION_DENIED
+                ) {
+
                     setLocationError(
                         'Debes permitir acceso a ubicación'
                     );
+
                 } else {
+
                     setLocationError(
                         'No se pudo obtener ubicación'
                     );
+
                 }
 
                 setLoadingLocation(false);
@@ -113,17 +203,59 @@ const MapScreen = () => {
         );
     };
 
-    // =========================
+    // ======================================================
     // INITIAL LOCATION
-    // =========================
+    // ======================================================
 
     useEffect(() => {
+
         getCurrentLocation();
+
     }, []);
 
-    // =========================
-    // ROUTES
-    // =========================
+    // ======================================================
+    // SEARCH PLACE
+    // ======================================================
+
+    const searchPlace = async () => {
+
+        if (!search.trim()) return;
+
+        try {
+
+            const response = await fetch(
+                `http://127.0.0.1:5000/buscar?q=${encodeURIComponent(search)}`
+            );
+
+            const data = await response.json();
+
+            setSearchResults(data);
+
+            if (data.length > 0) {
+
+                const place = data[0];
+
+                const coords: LatLngTuple = [
+                    place.lat,
+                    place.lon
+                ];
+
+                setSelectedPlace(coords);
+
+                calculateRoute(coords);
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    };
+
+    // ======================================================
+    // CALCULATE ROUTE
+    // ======================================================
 
     const calculateRoute = async (
         destination: LatLngTuple
@@ -144,41 +276,56 @@ const MapScreen = () => {
                 `${fromLonLat};${toLonLat}` +
                 `?overview=full&geometries=geojson`;
 
-            const response = await fetch(url);
+            const response =
+                await fetch(url);
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
             if (!data.routes?.length) return;
 
             const rawCoords =
-                data.routes[0].geometry.coordinates;
+                data.routes[0]
+                    .geometry
+                    .coordinates;
 
             const coords: LatLngTuple[] =
                 rawCoords.map(
-                    (c: [number, number]) => [c[1], c[0]]
+                    (c: [number, number]) => [
+                        c[1],
+                        c[0]
+                    ]
                 );
 
             setRoute({
+
                 coordinates: coords,
+
                 distanceKm:
                     data.routes[0].distance / 1000,
+
                 durationMin:
                     data.routes[0].duration / 60
             });
 
         } catch (error) {
+
             console.error(error);
+
         }
+
     };
 
-    // =========================
-    // USER MARKER ICON
-    // =========================
+    // ======================================================
+    // USER ICON
+    // ======================================================
 
     const userIcon = useMemo(() => {
 
         return L.divIcon({
+
             className: '',
+
             html: `
                 <div
                     style="
@@ -191,528 +338,523 @@ const MapScreen = () => {
                     "
                 ></div>
             `,
+
             iconSize: [20, 20],
+
             iconAnchor: [10, 10]
         });
 
     }, []);
 
-return (
+    // ======================================================
+    // RETURN
+    // ======================================================
 
-    <div className="w-full h-screen bg-[#f5f7fb] flex flex-col overflow-hidden">
+    return (
 
-        {/* ======================================================
-            HEADER
-        ====================================================== */}
+        <div className="w-full h-screen bg-[#f5f7fb] flex flex-col overflow-hidden">
 
-        <header className="h-16 shrink-0 bg-primary text-white border-b border-white/10 shadow-md z-30">
+            {/* ======================================================
+                HEADER
+            ====================================================== */}
 
-            <div className="w-full h-full max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <header className="h-16 shrink-0 bg-primary text-white border-b border-white/10 shadow-md z-30">
 
-                <div className="flex items-center gap-3">
+                <div className="w-full h-full max-w-7xl mx-auto px-4 flex items-center justify-between">
 
-                    <button className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
+                    <div className="flex items-center gap-3">
 
-                        <span className="material-symbols-outlined">
-                            menu
-                        </span>
+                        <button className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
 
+                            <span className="material-symbols-outlined">
+                                menu
+                            </span>
+
+                        </button>
+
+                        <div>
+
+                            <h1 className="text-lg font-bold leading-none">
+                                Tijuana Sin Barreras
+                            </h1>
+
+                            <p className="text-xs text-white/80">
+                                Mapa de accesibilidad urbana
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <button
+                        onClick={getCurrentLocation}
+                        className="h-10 px-4 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-gray-100 transition-colors"
+                    >
+                        Mi ubicación
                     </button>
 
-                    <div>
+                </div>
 
-                        <h1 className="text-lg font-bold leading-none">
-                            Tijuana Sin Barreras
-                        </h1>
+            </header>
 
-                        <p className="text-xs text-white/80">
-                            Mapa de accesibilidad urbana
-                        </p>
+            {/* ======================================================
+                CONTENT
+            ====================================================== */}
+
+            <main className="flex-1 overflow-hidden">
+
+                <div className="w-full h-full max-w-7xl mx-auto p-4">
+
+                    <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
+
+                        {/* ======================================================
+                            SIDEBAR
+                        ====================================================== */}
+
+                        <aside className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+
+                            {/* HEADER */}
+
+                            <div className="p-5 border-b">
+
+                                <h2 className="text-xl font-bold text-gray-800">
+                                    Buscar ubicación
+                                </h2>
+
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Encuentra lugares y calcula rutas
+                                </p>
+
+                            </div>
+
+                            {/* SEARCH */}
+
+                            <div className="p-5 border-b">
+
+                                <div className="relative">
+
+                                    <span
+                                        className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                                    >
+                                        search
+                                    </span>
+
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar calle, colonia o lugar..."
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        onKeyDown={(e) => {
+
+                                            if (
+                                                e.key === 'Enter'
+                                            ) {
+
+                                                searchPlace();
+
+                                            }
+
+                                        }}
+                                        className="
+                                            w-full
+                                            h-14
+                                            rounded-2xl
+                                            border
+                                            border-gray-300
+                                            bg-gray-50
+                                            pl-12
+                                            pr-4
+                                            outline-none
+                                            focus:border-primary
+                                            focus:ring-4
+                                            focus:ring-primary/10
+                                            transition-all
+                                        "
+                                    />
+
+                                </div>
+
+                                {/* RESULTS */}
+
+                                <div className="mt-4 flex flex-col gap-2 max-h-[250px] overflow-y-auto">
+
+                                    {searchResults.map(
+                                        (place, index) => (
+
+                                            <button
+                                                key={index}
+                                                onClick={() => {
+
+                                                    const coords: LatLngTuple = [
+                                                        place.lat,
+                                                        place.lon
+                                                    ];
+
+                                                    setSelectedPlace(coords);
+
+                                                    calculateRoute(coords);
+
+                                                }}
+                                                className="
+                                                    p-3
+                                                    rounded-xl
+                                                    border
+                                                    border-gray-200
+                                                    hover:border-primary
+                                                    hover:bg-primary/5
+                                                    text-left
+                                                    transition-all
+                                                "
+                                            >
+
+                                                <p className="text-sm font-medium text-gray-800">
+                                                    {place.name}
+                                                </p>
+
+                                            </button>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            </div>
+
+                            {/* LOCATION INFO */}
+
+                            <div className="px-5 py-4 border-b bg-gray-50">
+
+                                {loadingLocation && (
+
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+
+                                        <span className="material-symbols-outlined animate-spin text-[18px]">
+                                            progress_activity
+                                        </span>
+
+                                        Obteniendo ubicación...
+
+                                    </div>
+
+                                )}
+
+                                {locationError && (
+
+                                    <div className="text-sm text-red-500">
+                                        {locationError}
+                                    </div>
+
+                                )}
+
+                                {userLocation && (
+
+                                    <div className="space-y-3">
+
+                                        <div className="flex items-center justify-between">
+
+                                            <div>
+
+                                                <p className="text-xs text-gray-500">
+                                                    Precisión GPS
+                                                </p>
+
+                                                <p className="font-bold text-primary">
+                                                    {Math.round(
+                                                        accuracy ?? 0
+                                                    )}m
+                                                </p>
+
+                                            </div>
+
+                                            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+
+                                                <span className="material-symbols-outlined">
+                                                    my_location
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                        <button
+                                            onClick={getCurrentLocation}
+                                            className="
+                                                w-full
+                                                h-12
+                                                rounded-xl
+                                                bg-primary
+                                                text-white
+                                                font-semibold
+                                                hover:opacity-90
+                                                transition-opacity
+                                            "
+                                        >
+                                            Actualizar ubicación
+                                        </button>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+                        </aside>
+
+                        {/* ======================================================
+                            MAP
+                        ====================================================== */}
+
+                        <section className="flex flex-col gap-4 overflow-hidden">
+
+                            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+
+                                {/* MAP HEADER */}
+
+                                <div className="h-16 border-b px-5 flex items-center justify-between shrink-0">
+
+                                    <div>
+
+                                        <h2 className="font-bold text-gray-800">
+                                            Mapa interactivo
+                                        </h2>
+
+                                        <p className="text-sm text-gray-500">
+                                            Ubicación en tiempo real
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                {/* MAP */}
+
+                                <div className="flex-1 relative min-h-[300px]">
+
+                                    <MapContainer
+                                        center={
+                                            userLocation ||
+                                            DEFAULT_LOCATION
+                                        }
+                                        zoom={16}
+                                        className="w-full h-full z-0"
+                                        zoomControl={true}
+                                    >
+
+                                        <TileLayer
+                                            attribution='&copy; OpenStreetMap contributors'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        />
+
+                                        {/* FLY */}
+
+                                        <FlyToUser
+                                            location={userLocation}
+                                        />
+
+                                        <FlyToPlace
+                                            location={selectedPlace}
+                                        />
+
+                                        {/* USER */}
+
+                                        {userLocation && (
+
+                                            <>
+
+                                                <CircleMarker
+                                                    center={userLocation}
+                                                    radius={40}
+                                                    pathOptions={{
+                                                        color: '#2563eb',
+                                                        fillColor: '#2563eb',
+                                                        fillOpacity: 0.15
+                                                    }}
+                                                />
+
+                                                <Marker
+                                                    position={userLocation}
+                                                    icon={userIcon}
+                                                    draggable={true}
+                                                    eventHandlers={{
+
+                                                        dragend: (e) => {
+
+                                                            const marker =
+                                                                e.target;
+
+                                                            const pos =
+                                                                marker.getLatLng();
+
+                                                            setUserLocation([
+                                                                pos.lat,
+                                                                pos.lng
+                                                            ]);
+
+                                                        }
+                                                    }}
+                                                >
+
+                                                    <Popup>
+                                                        Tu ubicación actual
+                                                    </Popup>
+
+                                                </Marker>
+
+                                            </>
+
+                                        )}
+
+                                        {/* SEARCHED PLACE */}
+
+                                        {selectedPlace && (
+
+                                            <Marker
+                                                position={selectedPlace}
+                                            >
+
+                                                <Popup>
+                                                    Lugar encontrado
+                                                </Popup>
+
+                                            </Marker>
+
+                                        )}
+
+                                        {/* ROUTE */}
+
+                                        {route && (
+
+                                            <Polyline
+                                                positions={
+                                                    route.coordinates
+                                                }
+                                                pathOptions={{
+                                                    color: '#2563eb',
+                                                    weight: 6
+                                                }}
+                                            />
+
+                                        )}
+
+                                    </MapContainer>
+
+                                </div>
+
+                                {/* ROUTE INFO */}
+
+                                {route && (
+
+                                    <div className="border-t px-5 py-4 bg-gray-50 shrink-0">
+
+                                        <div className="flex flex-wrap items-center gap-6">
+
+                                            <div>
+
+                                                <p className="text-xs text-gray-500">
+                                                    Distancia
+                                                </p>
+
+                                                <p className="font-bold text-gray-800">
+                                                    {route.distanceKm.toFixed(2)} km
+                                                </p>
+
+                                            </div>
+
+                                            <div>
+
+                                                <p className="text-xs text-gray-500">
+                                                    Tiempo estimado
+                                                </p>
+
+                                                <p className="font-bold text-gray-800">
+                                                    {route.durationMin.toFixed(0)} min
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+                        </section>
 
                     </div>
 
                 </div>
 
-                <button
-                    onClick={getCurrentLocation}
-                    className="h-10 px-4 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-gray-100 transition-colors"
-                >
-                    Mi ubicación
+            </main>
+
+            {/* ======================================================
+                BOTTOM NAVIGATION
+            ====================================================== */}
+
+            <nav className="h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
+
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+
+                    <span className="material-symbols-outlined">
+                        home
+                    </span>
+
+                    <span className="text-xs mt-1">
+                        Inicio
+                    </span>
+
                 </button>
 
-            </div>
+                <button className="flex flex-col items-center justify-center text-primary">
 
-        </header>
+                    <span
+                        className="material-symbols-outlined"
+                        style={{
+                            fontVariationSettings: "'FILL' 1"
+                        }}
+                    >
+                        map
+                    </span>
 
-        {/* ======================================================
-            CONTENT
-        ====================================================== */}
+                    <span className="text-xs font-semibold mt-1">
+                        Mapa
+                    </span>
 
-        <main className="flex-1 overflow-hidden">
+                </button>
 
-            <div className="w-full h-full max-w-7xl mx-auto p-4">
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
 
-                <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
+                    <span className="material-symbols-outlined">
+                        add_circle
+                    </span>
 
-                    {/* ======================================================
-                        LEFT PANEL
-                    ====================================================== */}
+                    <span className="text-xs mt-1">
+                        Reportar
+                    </span>
 
-                    {/* ======================================================
-                        SEARCH PANEL
-                    ====================================================== */}
+                </button>
 
-                    <aside className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
 
-                        {/* SEARCH HEADER */}
+                    <span className="material-symbols-outlined">
+                        person
+                    </span>
 
-                        <div className="p-5 border-b">
+                    <span className="text-xs mt-1">
+                        Perfil
+                    </span>
 
-                            <h2 className="text-xl font-bold text-gray-800">
-                                Buscar ubicación
-                            </h2>
+                </button>
 
-                            <p className="text-sm text-gray-500 mt-1">
-                                Encuentra lugares y calcula rutas
-                            </p>
+            </nav>
 
-                        </div>
+        </div>
 
-                        {/* SEARCH BAR */}
+    );
+};
 
-                        <div className="p-5 border-b">
+export default MapScreen;
 
-                            <div className="relative">
-
-                                <span
-                                    className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                >
-                                    search
-                                </span>
-
-                                <input
-                                    type="text"
-                                    placeholder="Buscar calle, colonia o lugar..."
-                                    className="
-                                        w-full
-                                        h-14
-                                        rounded-2xl
-                                        border
-                                        border-gray-300
-                                        bg-gray-50
-                                        pl-12
-                                        pr-4
-                                        outline-none
-                                        focus:border-primary
-                                        focus:ring-4
-                                        focus:ring-primary/10
-                                        transition-all
-                                    "
-                                />
-
-                            </div>
-
-                        </div>
-
-                        {/* LOCATION INFO */}
-
-                        <div className="px-5 py-4 border-b bg-gray-50">
-
-                            {loadingLocation && (
-
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-
-                                    <span className="material-symbols-outlined animate-spin text-[18px]">
-                                        progress_activity
-                                    </span>
-
-                                    Obteniendo ubicación...
-
-                                </div>
-
-                            )}
-
-                            {locationError && (
-
-                                <div className="text-sm text-red-500">
-                                    {locationError}
-                                </div>
-
-                            )}
-
-                            {userLocation && (
-
-                                <div className="space-y-3">
-
-                                    <div className="flex items-center justify-between">
-
-                                        <div>
-
-                                            <p className="text-xs text-gray-500">
-                                                Precisión GPS
-                                            </p>
-
-                                            <p className="font-bold text-primary">
-                                                {Math.round(accuracy ?? 0)}m
-                                            </p>
-
-                                        </div>
-
-                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-
-                                            <span className="material-symbols-outlined">
-                                                my_location
-                                            </span>
-
-                                        </div>
-
-                                    </div>
-
-                                    <button
-                                        onClick={getCurrentLocation}
-                                        className="
-                                            w-full
-                                            h-12
-                                            rounded-xl
-                                            bg-primary
-                                            text-white
-                                            font-semibold
-                                            hover:opacity-90
-                                            transition-opacity
-                                        "
-                                    >
-                                        Actualizar ubicación
-                                    </button>
-
-                                </div>
-
-                            )}
-
-                        </div>
-
-                        {/* QUICK ACTIONS */}
-
-                        <div className="p-5 flex flex-col gap-3">
-
-                            <button
-                                className="
-                                    w-full
-                                    h-14
-                                    rounded-2xl
-                                    border
-                                    border-gray-200
-                                    hover:border-primary
-                                    hover:bg-primary/5
-                                    transition-all
-                                    flex
-                                    items-center
-                                    gap-4
-                                    px-4
-                                "
-                            >
-
-                                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-
-                                    <span className="material-symbols-outlined">
-                                        accessible
-                                    </span>
-
-                                </div>
-
-                                <div className="text-left">
-
-                                    <p className="font-semibold text-gray-800">
-                                        Rutas accesibles
-                                    </p>
-
-                                    <p className="text-xs text-gray-500">
-                                        Calles adaptadas
-                                    </p>
-
-                                </div>
-
-                            </button>
-
-                            <button
-                                className="
-                                    w-full
-                                    h-14
-                                    rounded-2xl
-                                    border
-                                    border-gray-200
-                                    hover:border-primary
-                                    hover:bg-primary/5
-                                    transition-all
-                                    flex
-                                    items-center
-                                    gap-4
-                                    px-4
-                                "
-                            >
-
-                                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-
-                                    <span className="material-symbols-outlined">
-                                        warning
-                                    </span>
-
-                                </div>
-
-                                <div className="text-left">
-
-                                    <p className="font-semibold text-gray-800">
-                                        Zonas con barreras
-                                    </p>
-
-                                    <p className="text-xs text-gray-500">
-                                        Reportes recientes
-                                    </p>
-
-                                </div>
-
-                            </button>
-
-                        </div>
-
-                    </aside>
-
-                    {/* ======================================================
-                        MAP SECTION
-                    ====================================================== */}
-
-                    <section className="flex flex-col gap-4 overflow-hidden">
-
-                        {/* MAP CARD */}
-
-                        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
-
-                            {/* MAP TOPBAR */}
-
-                            <div className="h-16 border-b px-5 flex items-center justify-between shrink-0">
-
-                                <div>
-
-                                    <h2 className="font-bold text-gray-800">
-                                        Mapa interactivo
-                                    </h2>
-
-                                    <p className="text-sm text-gray-500">
-                                        Ubicación en tiempo real
-                                    </p>
-
-                                </div>
-
-                                <div className="flex items-center gap-2">
-
-                                </div>
-
-                            </div>
-
-                            {/* ======================================================
-                                MAP CONTAINER
-                            ====================================================== */}
-
-                            <div className="flex-1 relative min-h-[300px]">
-
-                                <MapContainer
-                                    center={userLocation || DEFAULT_LOCATION}
-                                    zoom={16}
-                                    className="w-full h-full z-0"
-                                    zoomControl={true}
-                                >
-
-                                    <TileLayer
-                                        attribution='&copy; OpenStreetMap contributors'
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    />
-
-                                    {/* USER LOCATION */}
-
-                                    <FlyToUser
-                                        location={userLocation}
-                                    />
-
-                                    {userLocation && (
-
-                                        <>
-
-                                            {/* ACCURACY AREA */}
-
-                                            <CircleMarker
-                                                center={userLocation}
-                                                radius={40}
-                                                pathOptions={{
-                                                    color: '#2563eb',
-                                                    fillColor: '#2563eb',
-                                                    fillOpacity: 0.15
-                                                }}
-                                            />
-
-                                            {/* USER MARKER */}
-
-                                            <Marker
-                                                position={userLocation}
-                                                icon={userIcon}
-                                                draggable={true}
-
-                                                eventHandlers={{
-
-                                                    dragend: (e) => {
-
-                                                        const marker =
-                                                            e.target;
-
-                                                        const pos =
-                                                            marker.getLatLng();
-
-                                                        setUserLocation([
-                                                            pos.lat,
-                                                            pos.lng
-                                                        ]);
-                                                    }
-                                                }}
-                                            >
-
-                                                <Popup>
-                                                    Tu ubicación actual
-                                                </Popup>
-
-                                            </Marker>
-
-                                        </>
-
-                                    )}
-
-                                   
-                                    {/* ROUTE */}
-
-                                    {route && (
-
-                                        <Polyline
-                                            positions={route.coordinates}
-                                            pathOptions={{
-                                                color: '#2563eb',
-                                                weight: 6
-                                            }}
-                                        />
-
-                                    )}
-
-                                </MapContainer>
-
-                            </div>
-
-                            {/* MAP FOOTER */}
-
-                            {route && (
-
-                                <div className="border-t px-5 py-4 bg-gray-50 shrink-0">
-
-                                    <div className="flex flex-wrap items-center gap-6">
-
-                                        <div>
-
-                                            <p className="text-xs text-gray-500">
-                                                Distancia
-                                            </p>
-
-                                            <p className="font-bold text-gray-800">
-                                                {route.distanceKm.toFixed(2)} km
-                                            </p>
-
-                                        </div>
-
-                                        <div>
-
-                                            <p className="text-xs text-gray-500">
-                                                Tiempo estimado
-                                            </p>
-
-                                            <p className="font-bold text-gray-800">
-                                                {route.durationMin.toFixed(0)} min
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            )}
-
-                        </div>
-
-                    </section>
-
-                </div>
-
-            </div>
-
-        </main>
-
-        {/* ======================================================
-            BOTTOM NAVIGATION
-        ====================================================== */}
-
-        <nav className="h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
-
-            <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
-
-                <span className="material-symbols-outlined">
-                    home
-                </span>
-
-                <span className="text-xs mt-1">
-                    Inicio
-                </span>
-
-            </button>
-
-            <button className="flex flex-col items-center justify-center text-primary">
-
-                <span
-                    className="material-symbols-outlined"
-                    style={{
-                        fontVariationSettings: "'FILL' 1"
-                    }}
-                >
-                    map
-                </span>
-
-                <span className="text-xs font-semibold mt-1">
-                    Mapa
-                </span>
-
-            </button>
-
-            <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
-
-                <span className="material-symbols-outlined">
-                    add_circle
-                </span>
-
-                <span className="text-xs mt-1">
-                    Reportar
-                </span>
-
-            </button>
-
-            <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
-
-                <span className="material-symbols-outlined">
-                    person
-                </span>
-
-                <span className="text-xs mt-1">
-                    Perfil
-                </span>
-
-            </button>
-
-        </nav>
-
-    </div>
-
-);}
-
-export default MapScreen;   
