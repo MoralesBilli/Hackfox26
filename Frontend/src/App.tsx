@@ -12,7 +12,6 @@ import ProfileScreen from './ProfileScreen';
 import Accesibilidad from './Accesibilidad';
 import PlaneadorDeRuta from './PlaneadorDeRuta';
 import NavegacionActiva from './NavegacionActiva';
-import OnBoardingScreen from './OnBoardingScreen';
 import ReporteExitosoScreen from './ReporteExitosoScreen';
 import LoginScreen from './LoginScreen';
 import RegistroScreen from './RegistroScreen';
@@ -25,7 +24,6 @@ type Screen =
   | 'accessibility'
   | 'route-planner'
   | 'active-nav'
-  | 'onboarding'
   | 'success-report'
   | 'login'
   | 'registro';
@@ -53,7 +51,6 @@ function App() {
     accessibility: <Accesibilidad onNavigate={navigate} />,
     'route-planner': <PlaneadorDeRuta onNavigate={navigate} />,
     'active-nav': <NavegacionActiva onNavigate={navigate} />,
-    onboarding: <OnBoardingScreen onNavigate={navigate} />,
     'success-report': <ReporteExitosoScreen onNavigate={navigate} />,
     login: <LoginScreen onNavigate={navigate} />,
     registro: <RegistroScreen onNavigate={navigate} />,

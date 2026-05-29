@@ -46,45 +46,45 @@ const getTipoIcon = (tipo: string) => {
 
 const colorMap: Record<string, { bg: string; text: string; border: string; iconColor: string; shadow: string }> = {
     rojo: {
-        bg: 'bg-red-50/90 dark:bg-red-950/20',
-        text: 'text-red-700 dark:text-red-300',
-        border: 'border-red-200 dark:border-red-900/40',
-        iconColor: 'text-red-500',
+        bg: 'bg-red-100 dark:bg-red-900/60',
+        text: 'text-red-800 dark:text-red-200',
+        border: 'border-red-200 dark:border-red-800',
+        iconColor: 'text-red-600',
         shadow: 'hover:shadow-red-100/50 dark:hover:shadow-none'
     },
     naranja: {
-        bg: 'bg-orange-50/90 dark:bg-orange-950/20',
-        text: 'text-orange-700 dark:text-orange-300',
-        border: 'border-orange-200 dark:border-orange-900/40',
-        iconColor: 'text-orange-500',
+        bg: 'bg-orange-100 dark:bg-orange-900/60',
+        text: 'text-orange-800 dark:text-orange-200',
+        border: 'border-orange-200 dark:border-orange-850',
+        iconColor: 'text-orange-600',
         shadow: 'hover:shadow-orange-100/50 dark:hover:shadow-none'
     },
     cafe: {
-        bg: 'bg-amber-50/90 dark:bg-amber-950/20',
-        text: 'text-amber-800 dark:text-amber-300',
-        border: 'border-amber-200 dark:border-amber-900/30',
-        iconColor: 'text-amber-600',
+        bg: 'bg-amber-100 dark:bg-amber-900/50',
+        text: 'text-amber-900 dark:text-amber-200',
+        border: 'border-amber-250 dark:border-amber-800',
+        iconColor: 'text-amber-700',
         shadow: 'hover:shadow-amber-100/50 dark:hover:shadow-none'
     },
     negro: {
-        bg: 'bg-zinc-100 dark:bg-zinc-900/50',
-        text: 'text-zinc-800 dark:text-zinc-200',
-        border: 'border-zinc-300 dark:border-zinc-700',
-        iconColor: 'text-zinc-700 dark:text-zinc-300',
-        shadow: 'hover:shadow-zinc-100/50 dark:hover:shadow-none'
+        bg: 'bg-zinc-800 dark:bg-zinc-100',
+        text: 'text-zinc-100 dark:text-zinc-900',
+        border: 'border-zinc-700 dark:border-zinc-300',
+        iconColor: 'text-zinc-400 dark:text-zinc-600',
+        shadow: 'hover:shadow-zinc-800/20 dark:hover:shadow-none'
     },
     morado: {
-        bg: 'bg-purple-50/90 dark:bg-purple-950/20',
-        text: 'text-purple-700 dark:text-purple-300',
-        border: 'border-purple-200 dark:border-purple-900/40',
-        iconColor: 'text-purple-500',
+        bg: 'bg-purple-100 dark:bg-purple-900/60',
+        text: 'text-purple-800 dark:text-purple-200',
+        border: 'border-purple-200 dark:border-purple-800',
+        iconColor: 'text-purple-600',
         shadow: 'hover:shadow-purple-100/50 dark:hover:shadow-none'
     },
     gris: {
-        bg: 'bg-slate-50/90 dark:bg-slate-900/20',
-        text: 'text-slate-700 dark:text-slate-300',
-        border: 'border-slate-200 dark:border-slate-800',
-        iconColor: 'text-slate-500',
+        bg: 'bg-slate-100 dark:bg-slate-800',
+        text: 'text-slate-800 dark:text-slate-200',
+        border: 'border-slate-200 dark:border-slate-700',
+        iconColor: 'text-slate-600',
         shadow: 'hover:shadow-slate-100/50 dark:hover:shadow-none'
     }
 };
@@ -111,36 +111,40 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
 
     return (
         <article className={`bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm ring-1 ring-outline-variant/10 hover:shadow-md transition-all duration-300 group flex flex-col ${badge.shadow}`}>
-            {/* Encabezado */}
-            <div className="p-4 flex justify-between items-start gap-2">
-                <div className="flex items-center gap-3">
-                    
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-title-md text-title-md leading-tight font-bold text-on-surface">{post.author}</p>
-                            {post.tipo && (
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-bold tracking-wide transition-all ${badge.bg} ${badge.text} ${badge.border}`}>
-                                    <span className="material-symbols-outlined text-[13px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
-                                        {getTipoIcon(post.tipo)}
-                                    </span>
-                                    {formatTipo(post.tipo)}
-                                </span>
-                            )}
-                        </div>
-                        <p className="font-label-sm text-label-sm text-on-surface-variant/80 mt-0.5">{post.timeLocation}</p>
-                    </div>
+            {/* Encabezado Responsivo */}
+            <div className="p-4 flex flex-row justify-between items-center gap-2">
+                {/* Lado Izquierdo: Datos del Autor / Reporte */}
+                <div className="min-w-0">
+                    <p className="font-title-md text-title-md leading-tight font-bold text-on-surface truncate max-w-[180px] sm:max-w-xs">
+                        {post.author}
+                    </p>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant/80 mt-0.5">
+                        {post.timeLocation}
+                    </p>
                 </div>
 
-                {post.statusType === 'pending' ? (
-                    <div className="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-bold uppercase tracking-wider">
-                        {post.status}
-                    </div>
-                ) : (
-                    <div className="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        {post.status}
-                    </div>
-                )}
+                {/* Lado Derecho: Categoría y Estado del Reporte */}
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    {post.tipo && (
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-bold tracking-wide transition-all w-fit ${badge.bg} ${badge.text} ${badge.border}`}>
+                            <span className="material-symbols-outlined text-[13px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
+                                {getTipoIcon(post.tipo)}
+                            </span>
+                            {formatTipo(post.tipo)}
+                        </span>
+                    )}
+
+                    {post.statusType === 'pending' ? (
+                        <div className="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-bold uppercase tracking-wider">
+                            {post.status}
+                        </div>
+                    ) : (
+                        <div className="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            {post.status}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Imagen Principal */}
@@ -239,6 +243,11 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
         }
     };
 
+    const handleRefresh = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        fetchLiveReports();
+    };
+
     useEffect(() => {
         fetchLiveReports();
     }, []);
@@ -251,19 +260,19 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
             `}</style>
 
             {/* TopAppBar */}
-            <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
+            <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
                 <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="src\assets\Sin nombre.png" />
                         </div>
-                        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
+                        <h1 className="font-app-title text-app-title text-on-primary">
                             Tijuana Sin Barreras
                         </h1>
                     </div>
                     <button 
                         onClick={() => onNavigate && onNavigate('profile')}
-                        className="text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20"
+                        className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
                     >
                         <span className="material-symbols-outlined">notifications</span>
                     </button>
@@ -352,8 +361,8 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                         {/* Story-style Filters */}
                         <section className="py-2 overflow-x-auto hide-scrollbar whitespace-nowrap px-margin-mobile md:px-0 flex gap-4 w-full">
                             <button 
-                                onClick={fetchLiveReports}
-                                className="inline-flex flex-col items-center gap-2 group focus:outline-none"
+                                onClick={handleRefresh}
+                                className="hidden md:inline-flex flex-col items-center gap-2 group focus:outline-none"
                             >
                                 <div className="w-16 h-16 rounded-full border-2 border-primary p-0.5 transition-transform group-active:scale-90">
                                     <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -422,9 +431,12 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
             </button>
 
             {/* BottomNavBar */}
-            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">
+            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50 md:hidden">
                 <button 
-                    onClick={() => onNavigate && onNavigate('home')}
+                    onClick={() => {
+                        handleRefresh();
+                        if (onNavigate) onNavigate('home');
+                    }}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >
                     <span className="material-symbols-outlined">home</span>

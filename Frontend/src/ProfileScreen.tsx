@@ -24,7 +24,7 @@ const ProfileScreen = ({ onNavigate }: any) => {
             localStorage.removeItem('token');
             localStorage.removeItem('usuario');
             alert('Sesión cerrada exitosamente');
-            onNavigate('onboarding');
+            onNavigate('home');
         }
     };
 

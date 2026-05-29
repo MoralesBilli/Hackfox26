@@ -5,6 +5,11 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+@theme {
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 32px;
+}
+
 /* --- ESTILOS BASE --- */
 @layer base {
     body {
