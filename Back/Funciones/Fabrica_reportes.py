@@ -35,25 +35,34 @@ class Tarjetas(TarjetaBase):
         if tipo == "accidente_vial":
             color = "rojo"
         elif tipo == "Problema_peatonal":
-            color=="naranja"
-        elif tipo =="infraestructura_dañada":
-            color="cafe"
-        elif tipo =="emergencia_riesgo":
-            color =="negro"
+            color = "naranja"
+        elif tipo == "infraestructura_dañada":
+            color = "cafe"
+        elif tipo == "emergencia_riesgo":
+            color = "negro"
         elif tipo == "peligro_discapacidad":
-            color="morado"
+            color = "morado"
         else:
             color = "gris"
 
+        # Formatear la fecha de forma segura a ISO string si tiene el método isoformat
+        fecha_str = self.reporte.timestamp
+        if self.reporte.timestamp:
+            try:
+                fecha_str = self.reporte.timestamp.isoformat()
+            except AttributeError:
+                fecha_str = str(self.reporte.timestamp)
 
         return {
+            'id': self.reporte.id_reporte,
+            'estado': self.reporte.estado,
             'tipo': self.reporte.tipo,
             'color': color,
             'descripcion': self.reporte.descripcion_usuario,
             'imagen': self.reporte.url_imagen,
-            'fecha': self.reporte.timestamp,
+            'fecha': fecha_str,
             'latitud': self.reporte.latitud,
-            'longitud':self.reporte.longitud
+            'longitud': self.reporte.longitud
         }
 
 

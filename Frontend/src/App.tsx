@@ -1,9 +1,10 @@
+import FeedScreen from './FeedScreen';
 import HomeScreen from './HomeScreen';
 
 function App() {
   return (
     <>
-      <HomeScreen />
+      <FeedScreen />
     </>
   )
 }
