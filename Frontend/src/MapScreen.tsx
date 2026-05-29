@@ -176,7 +176,6 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const loadIncidents = async () => {
         setLoadingIncidents(true);
         try {
-            // 🔴 AJUSTA ESTA URL A TU ENDPOINT REAL 🔴
             const response = await fetch('http://127.0.0.1:5000/obtener_reportes');
             
             if (!response.ok) {
@@ -185,9 +184,39 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
             
             const data = await response.json();
             
-            // Filtrar solo incidentes pendientes o activos
-            const activeIncidents = data.filter(
-                (inc: Incident) => inc.estado === 'pendiente' || inc.estado === 'aprobado'
+            // Mapear y normalizar los datos recibidos del backend para evitar tuplas/arrays en las coordenadas
+            const normalizedData = data.map((item: any, index: number) => {
+                // Extraer latitud y longitud manejando si vienen en una lista/tupla debido a la coma final en python
+                let lat = Array.isArray(item.latitud) ? item.latitud[0] : item.latitud;
+                let lon = Array.isArray(item.longitud) ? item.longitud[0] : item.longitud;
+
+                // Asegurar conversión numérica
+                const parsedLat = typeof lat === 'string' ? parseFloat(lat) : lat;
+                const parsedLon = typeof lon === 'string' ? parseFloat(lon) : lon;
+
+                return {
+                    id: item.id || `incident-${index}`,
+                    categoria: item.categoria || 'Reporte Ciudadano',
+                    color: item.color || 'gris',
+                    descripcion: item.descripcion || 'Obstáculo detectado en la vía pública.',
+                    estado: item.estado || '',
+                    fecha: item.fecha || new Date().toISOString(),
+                    imagen: item.imagen || '',
+                    latitud: parsedLat,
+                    longitud: parsedLon,
+                    subcategoria: item.subcategoria || 'Reporte de Accesibilidad',
+                    tipo: item.tipo || 'desconocido'
+                };
+            });
+
+            // Filtrar solo incidentes con coordenadas válidas y que estén pendientes o aprobados/verificados
+            const activeIncidents = normalizedData.filter(
+                (inc: Incident) => 
+                    typeof inc.latitud === 'number' && 
+                    !isNaN(inc.latitud) && 
+                    typeof inc.longitud === 'number' && 
+                    !isNaN(inc.longitud) && 
+                    (inc.estado === 'pendiente' || inc.estado === 'aprobado' || inc.estado === 'verificado')
             );
             
             setIncidents(activeIncidents);
@@ -220,21 +249,24 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
     const getIncidentIcon = (incident: Incident) => {
         const colors = {
-            'rojo': '#dc2626',
-            'amarillo': '#eab308',
-            'verde': '#10b981',
-            'azul': '#3b82f6'
+            'rojo': '#dc2626',      // Accidente vial
+            'naranja': '#f97316',   // Problema peatonal
+            'cafe': '#78350f',      // Infraestructura dañada
+            'negro': '#09090b',     // Emergencia / riesgo
+            'morado': '#a855f7',    // Peligro movilidad / discapacidad
+            'gris': '#6b7280'       // Otros / por defecto
         };
         
         const icons: Record<string, string> = {
-            'accidente_vial': 'warning',
-            'construccion': 'construction',
-            'inundacion': 'water',
-            'cierre': 'block'
+            'accidente_vial': 'car_crash',
+            'Problema_peatonal': 'directions_walk',
+            'infraestructura_dañada': 'construction',
+            'emergencia_riesgo': 'warning',
+            'peligro_discapacidad': 'accessible'
         };
         
         const color = colors[incident.color as keyof typeof colors] || '#6b7280';
-        const iconName = icons[incident.tipo] || 'error';
+        const iconName = icons[incident.tipo] || 'report';
         
         return L.divIcon({
             className: 'custom-div-icon',
@@ -457,15 +489,15 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
         filterType === 'todos' ? true : inc.tipo === filterType
     );
 
-    // ======================================================
-    // INCIDENT STATS
-    // ======================================================
-
     const incidentStats = useMemo(() => {
         const total = incidents.length;
         const pendientes = incidents.filter(i => i.estado === 'pendiente').length;
         const accidentes = incidents.filter(i => i.tipo === 'accidente_vial').length;
-        return { total, pendientes, accidentes };
+        const peatonal = incidents.filter(i => i.tipo === 'Problema_peatonal').length;
+        const infraestructura = incidents.filter(i => i.tipo === 'infraestructura_dañada').length;
+        const emergencia = incidents.filter(i => i.tipo === 'emergencia_riesgo').length;
+        const discapacidad = incidents.filter(i => i.tipo === 'peligro_discapacidad').length;
+        return { total, pendientes, accidentes, peatonal, infraestructura, emergencia, discapacidad };
     }, [incidents]);
 
     // ======================================================
@@ -623,26 +655,66 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     Filtrar incidentes
                                 </h3>
                                 
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1">
                                     <button
                                         onClick={() => setFilterType('todos')}
-                                        className={`px-3 py-1 rounded-full text-xs ${
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${
                                             filterType === 'todos' 
                                                 ? 'bg-primary text-white' 
-                                                : 'bg-gray-100 text-gray-600'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
                                         Todos ({incidentStats.total})
                                     </button>
                                     <button
                                         onClick={() => setFilterType('accidente_vial')}
-                                        className={`px-3 py-1 rounded-full text-xs ${
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${
                                             filterType === 'accidente_vial' 
                                                 ? 'bg-red-500 text-white' 
-                                                : 'bg-red-100 text-red-600'
+                                                : 'bg-red-50 text-red-600 hover:bg-red-100'
                                         }`}
                                     >
                                         🚗 Accidentes ({incidentStats.accidentes})
+                                    </button>
+                                    <button
+                                        onClick={() => setFilterType('Problema_peatonal')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${
+                                            filterType === 'Problema_peatonal' 
+                                                ? 'bg-orange-500 text-white' 
+                                                : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                                        }`}
+                                    >
+                                        🚶 Peatonal ({incidentStats.peatonal})
+                                    </button>
+                                    <button
+                                        onClick={() => setFilterType('infraestructura_dañada')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${
+                                            filterType === 'infraestructura_dañada' 
+                                                ? 'bg-amber-800 text-white' 
+                                                : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                        }`}
+                                    >
+                                        🚧 Infraestructura ({incidentStats.infraestructura})
+                                    </button>
+                                    <button
+                                        onClick={() => setFilterType('emergencia_riesgo')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${
+                                            filterType === 'emergencia_riesgo' 
+                                                ? 'bg-zinc-900 text-white' 
+                                                : 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200'
+                                        }`}
+                                    >
+                                        ⚠️ Emergencias ({incidentStats.emergencia})
+                                    </button>
+                                    <button
+                                        onClick={() => setFilterType('peligro_discapacidad')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${
+                                            filterType === 'peligro_discapacidad' 
+                                                ? 'bg-purple-600 text-white' 
+                                                : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                                        }`}
+                                    >
+                                        ♿ Accesibilidad ({incidentStats.discapacidad})
                                     </button>
                                 </div>
                                 
@@ -650,7 +722,6 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     <div className="mt-3 p-2 bg-blue-50 rounded-xl">
                                         <div className="text-xs text-gray-600">
                                             📊 {incidentStats.total} incidentes activos
-                                            ({incidentStats.pendientes} pendientes)
                                         </div>
                                     </div>
                                 )}
@@ -777,7 +848,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                             >
                                                 <Popup>
                                                     <div className="p-3 min-w-[280px] max-w-[320px]">
-                                                        <div className="flex items-center justify-between mb-3">
+                                                        <div className="flex items-center mb-3">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="material-symbols-outlined text-red-500">
                                                                     warning
@@ -786,13 +857,6 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                                     {incident.categoria}
                                                                 </h3>
                                                             </div>
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                                incident.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                                                                incident.estado === 'aprobado' ? 'bg-green-100 text-green-700' :
-                                                                'bg-gray-100 text-gray-700'
-                                                            }`}>
-                                                                {incident.estado}
-                                                            </span>
                                                         </div>
                                                         
                                                         <p className="text-sm text-gray-600 mb-3">
