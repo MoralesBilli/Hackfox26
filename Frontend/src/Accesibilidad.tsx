@@ -324,11 +324,10 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                                 <p className="text-[11px] text-on-surface-variant mb-3 leading-relaxed">{t('a11y_voice_hint')}</p>
 
                                 <button
-                                    className={`w-full h-12 rounded-xl flex items-center justify-center gap-2 font-medium text-sm transition-all ${
-                                        isListening
+                                    className={`w-full h-12 rounded-xl flex items-center justify-center gap-2 font-medium text-sm transition-all ${isListening
                                             ? 'bg-red-500 text-white animate-pulse'
                                             : 'bg-primary/10 text-primary hover:bg-primary/20'
-                                    }`}
+                                        }`}
                                     onClick={isListening ? stopListening : startListening}
                                 >
                                     <span className="material-symbols-outlined text-[20px]">
