@@ -62,7 +62,9 @@ class Tarjetas(TarjetaBase):
             'imagen': self.reporte.url_imagen,
             'fecha': fecha_str,
             'latitud': self.reporte.latitud,
-            'longitud': self.reporte.longitud
+            'longitud': self.reporte.longitud,
+            'categoria': getattr(self.reporte, 'categoria', 'Desconocido'),
+            'subcategoria': getattr(self.reporte, 'subcategoria', 'Desconocido')
         }
 
 

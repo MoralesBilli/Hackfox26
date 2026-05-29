@@ -118,6 +118,22 @@ def crear_reporte():
                     'detalle': str(e)
                 }), 500
         
+        # Mapeo de categorías a los identificadores que espera la lógica del backend (ej: Fabrica_reportes.py)
+        categoria_ia = clasificacion.get('categoria', 'Desconocido').strip()
+        subcategoria_ia = clasificacion.get('subcategoria', 'Desconocido').strip()
+        
+        category_mapping = {
+            "accidente vial": "accidente_vial",
+            "problema en tránsito peatonal": "Problema_peatonal",
+            "problema en transito peatonal": "Problema_peatonal",
+            "infraestructura dañada": "infraestructura_dañada",
+            "infraestructura danada": "infraestructura_dañada",
+            "emergencia o riesgo público": "emergencia_riesgo",
+            "emergencia o riesgo publico": "emergencia_riesgo",
+            "riesgo para personas con discapacidad": "peligro_discapacidad"
+        }
+        tipo_db = category_mapping.get(categoria_ia.lower(), 'otro')
+
         # 3. Guardar el reporte en Firestore
         id_reporte = str(uuid.uuid4())
         
@@ -126,7 +142,9 @@ def crear_reporte():
             'uid': uid,
             'latitud': float(latitud),
             'longitud': float(longitud),
-            'tipo': clasificacion.get('tipo', 'Desconocido'),
+            'categoria': categoria_ia,
+            'subcategoria': subcategoria_ia,
+            'tipo': tipo_db,
             'severidad': clasificacion.get('severidad', 'media'),
             'descripcion_ia': clasificacion.get('descripcion', ''),
             'descripcion_usuario': descripcion_usuario,
@@ -139,7 +157,9 @@ def crear_reporte():
         db.reference(f'/reportes/{id_reporte}').set({
             'latitud': float(latitud),
             'longitud': float(longitud),
-            'tipo': clasificacion.get('tipo', 'Desconocido'),
+            'categoria': categoria_ia,
+            'subcategoria': subcategoria_ia,
+            'tipo': tipo_db,
             'severidad': clasificacion.get('severidad', 'media')
         })
 
@@ -147,7 +167,9 @@ def crear_reporte():
             'mensaje': 'Reporte creado con éxito y validado por IA.',
             'reporte': {
                 'id_reporte': id_reporte,
-                'tipo': clasificacion.get('tipo', 'Desconocido'),
+                'categoria': categoria_ia,
+                'subcategoria': subcategoria_ia,
+                'tipo': tipo_db,
                 'severidad': clasificacion.get('severidad', 'media'),
                 'descripcion_ia': clasificacion.get('descripcion', ''),
                 'url_imagen': url_imagen,

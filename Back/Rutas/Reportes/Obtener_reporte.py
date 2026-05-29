@@ -24,7 +24,9 @@ def obtener_reportes():
             longitud=data.get('longitud'),
             tipo=data.get('tipo'),
             severidad=data.get('severidad'),
-            url_imagen=data.get('url_imagen')
+            url_imagen=data.get('url_imagen'),
+            categoria=data.get('categoria', 'Desconocido'),
+            subcategoria=data.get('subcategoria', 'Desconocido')
         )
 
         reportes.append(reporte)

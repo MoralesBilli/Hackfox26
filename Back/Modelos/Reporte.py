@@ -10,7 +10,9 @@ class Reporte:
         longitud,
         tipo,
         severidad,
-        url_imagen
+        url_imagen,
+        categoria="Desconocido",
+        subcategoria="Desconocido"
     ):
 
         self.id_reporte = id_reporte
@@ -22,6 +24,8 @@ class Reporte:
         self.tipo = tipo
         self.severidad = severidad
         self.url_imagen = url_imagen
+        self.categoria = categoria
+        self.subcategoria = subcategoria
 
     # Convertir objeto a diccionario
     def to_dict(self):
@@ -34,6 +38,8 @@ class Reporte:
             'longitud': self.longitud,
             'estado': self.estado,
             'tipo': self.tipo,
-            'severidad':self.severidad,
-            'url_imagen':self.url_imagen
+            'severidad': self.severidad,
+            'url_imagen': self.url_imagen,
+            'categoria': self.categoria,
+            'subcategoria': self.subcategoria
         }
