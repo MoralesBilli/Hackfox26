@@ -2,29 +2,38 @@ class Reporte:
 
     def __init__(
         self,
-        id,
-        descripcion,
-        imagen,
-        fecha,
-        ubicacion,
-        estado='normal'
+        id_reporte,
+        descripcion_usuario,
+        estado,
+        timestamp,
+        latitud,
+        longitud,
+        tipo,
+        severidad,
+        url_imagen
     ):
 
-        self.id = id
-        self.descripcion = descripcion
-        self.imagen = imagen
-        self.fecha = fecha
-        self.ubicacion = ubicacion
+        self.id_reporte = id_reporte
+        self.descripcion_usuario = descripcion_usuario
+        self.timestamp = timestamp
+        self.latitud = latitud
+        self.longitud = longitud
         self.estado = estado
+        self.tipo = tipo
+        self.severidad = severidad
+        self.url_imagen = url_imagen
 
     # Convertir objeto a diccionario
     def to_dict(self):
 
         return {
-            'id': self.id,
-            'descripcion': self.descripcion,
-            'imagen': self.imagen,
-            'fecha': self.fecha,
-            'ubicacion': self.ubicacion,
-            'estado': self.estado
+            'id_reporte': self.id_reporte,
+            'descripcion_usuario': self.descripcion_usuario,
+            'timestamp': self.timestamp,
+            'latitud': self.latitud,
+            'longitud': self.longitud,
+            'estado': self.estado,
+            'tipo': self.tipo,
+            'severidad':self.severidad,
+            'url_imagen':self.url_imagen
         }

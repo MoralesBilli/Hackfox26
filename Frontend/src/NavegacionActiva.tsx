@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 
-const ActiveNavigationScreen = () => {
+const ActiveNavigationScreen = ({ onNavigate }: any) => {
     // Estado para controlar si la asistencia por voz está activa o no
     const [voiceEnabled, setVoiceEnabled] = useState<boolean>(true);
 
     // Funciones simuladas para los botones
     const handleEndNavigation = () => {
         console.log("Terminar navegación y regresar al mapa principal");
-        alert("Saliendo de la navegación...");
+        onNavigate('map');
     };
 
     const handleReportBarrier = () => {
         console.log("Abrir modal o pantalla para reportar barrera rápida");
+        onNavigate('report');
     };
 
     const handleRecalculate = () => {
@@ -151,6 +152,7 @@ const ActiveNavigationScreen = () => {
             {/* Accessibility FAB (Smaller contextual) */}
             <div className="absolute right-margin-mobile bottom-[397px] md:bottom-[400px] z-30">
                 <button
+                    onClick={() => onNavigate('accessibility')}
                     aria-label="Accesibilidad"
                     className="w-[44px] h-[44px] bg-primary text-on-primary rounded-full shadow-[0px_4px_12px_rgba(0,0,0,0.1)] flex items-center justify-center hover:opacity-90 active:scale-95 transition-transform focus:outline-none"
                 >

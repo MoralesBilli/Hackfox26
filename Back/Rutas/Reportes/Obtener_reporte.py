@@ -5,30 +5,31 @@ from Funciones.Fabrica_reportes import FactoryTarjetas
 
 Obtener_reporte_bp = Blueprint('obtener_reporte', __name__)
 
-
 def obtener_reportes():
-    try:
-        docs = firestore_db.collection('reportes').stream()
-        reportes = []
 
-        for doc in docs:
+    docs = firestore_db.collection('reportes').stream()
 
-            data = doc.to_dict()
+    reportes = []
 
-            reporte = Reporte(
-                id=doc.id,
-                descripcion=data.get('descripcion'),
-                imagen=data.get('url_imagen'),
-                fecha=data.get('fecha'),
-                ubicacion=data.get('ubicacion'),
-                estado=data.get('estado', 'normal')
-            )
+    for doc in docs:
 
-            reportes.append(reporte)
+        data = doc.to_dict()
 
-        return reportes
-    except  Exception as e:
-        return jsonify({'Error':f'Error obteneindo los reportes {str(e)}'})
+        reporte = Reporte(
+            id_reporte=doc.id,
+            descripcion_usuario=data.get('descripcion_usuario'),
+            estado=data.get('estado'),
+            timestamp=data.get('timestamp'),
+            latitud=data.get('latitud'),
+            longitud=data.get('longitud'),
+            tipo=data.get('tipo'),
+            severidad=data.get('severidad'),
+            url_imagen=data.get('url_imagen')
+        )
+
+        reportes.append(reporte)
+
+    return reportes
 
 
 @Obtener_reporte_bp.route('/obtener_reportes',methods=['GET'])

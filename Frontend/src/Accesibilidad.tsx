@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const AccessibilityPanelScreen = () => {
+const AccessibilityPanelScreen = ({ onNavigate }: any) => {
     // 1. Estados para controlar el panel y las preferencias
     const [isOpen, setIsOpen] = useState<boolean>(true); // Controla si el modal está abierto
     const [textSize, setTextSize] = useState<number>(3);
@@ -27,6 +27,7 @@ const AccessibilityPanelScreen = () => {
         });
         alert("Preferencias de accesibilidad guardadas.");
         setIsOpen(false);
+        onNavigate();
     };
 
     return (
@@ -99,7 +100,10 @@ const AccessibilityPanelScreen = () => {
                                 aria-label="Cerrar panel de accesibilidad"
                                 className="w-12 h-12 flex items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 rounded-full transition-colors -mr-2 focus:outline-none"
                                 type="button"
-                                onClick={() => setIsOpen(false)}
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    onNavigate();
+                                }}
                             >
                                 <span className="material-symbols-outlined">close</span>
                             </button>

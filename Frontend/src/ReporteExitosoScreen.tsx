@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SuccessScreen = () => {
+const SuccessScreen = ({ onNavigate }: any) => {
     return (
         <div className="bg-background min-h-screen text-on-background selection:bg-primary/20 flex flex-col font-body-md relative antialiased">
 
@@ -61,13 +61,13 @@ const SuccessScreen = () => {
                     <div className="w-full flex flex-col gap-4 mt-auto">
                         <button
                             className="w-full h-[52px] rounded-xl border-2 border-primary text-primary font-label-md text-label-md flex justify-center items-center hover:bg-primary/5 active:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                            onClick={() => console.log("Navegando al mapa...")}
+                            onClick={() => onNavigate('map')}
                         >
                             Ver en el mapa
                         </button>
                         <button
                             className="w-full h-[52px] rounded-xl bg-primary text-on-primary font-label-md text-label-md flex justify-center items-center hover:bg-primary-container active:scale-[0.98] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                            onClick={() => console.log("Navegando al Home...")}
+                            onClick={() => onNavigate('home')}
                         >
                             Ir al inicio
                         </button>
@@ -78,6 +78,7 @@ const SuccessScreen = () => {
 
             {/* Botón Flotante de Accesibilidad */}
             <button
+                onClick={() => onNavigate('accessibility')}
                 aria-label="Accesibilidad"
                 className="fixed bottom-6 right-6 w-[56px] h-[56px] bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0px_4px_12px_rgba(0,0,0,0.15)] z-50 hover:bg-primary-container transition-transform hover:scale-105 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >

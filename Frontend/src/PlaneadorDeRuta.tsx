@@ -7,7 +7,7 @@ interface RoutePreferences {
     transporteAccesible: boolean;
 }
 
-const RoutePlannerScreen = () => {
+const RoutePlannerScreen = ({ onNavigate }: any) => {
     // Estados para los campos de texto
     const [origen, setOrigen] = useState<string>('Mi ubicación actual');
     const [destino, setDestino] = useState<string>('');
@@ -47,7 +47,7 @@ const RoutePlannerScreen = () => {
             preferencias
         });
         console.log('-----------------------------------------');
-        alert('Calculando ruta... Revisa la consola.');
+        onNavigate('route-result');
     };
 
     return (
@@ -58,7 +58,7 @@ const RoutePlannerScreen = () => {
                 <button
                     aria-label="Volver"
                     className="w-12 h-12 flex items-center justify-center text-on-primary hover:opacity-90 active:scale-95 transition-transform"
-                    onClick={() => console.log('Volver a la pantalla anterior')}
+                    onClick={() => onNavigate('map')}
                 >
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>

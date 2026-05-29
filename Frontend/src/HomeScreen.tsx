@@ -1,4 +1,4 @@
-const HomeScreen = () => {
+const HomeScreen = ({ onNavigate }: any) => {
     return (
         <div className="bg-surface text-on-surface flex flex-col min-h-screen">
 
@@ -35,7 +35,7 @@ const HomeScreen = () => {
                 <div className="grid grid-cols-2 gap-4">
                     <button
                         className="bg-primary text-on-primary rounded-xl p-4 flex flex-col gap-3 items-start justify-center shadow-sm hover:opacity-90 transition-opacity min-h-[100px]"
-                        onClick={() => console.log('Ir al mapa')}
+                        onClick={() => onNavigate('map')}
                     >
                         <div className="w-10 h-10 rounded-full bg-on-primary/20 flex items-center justify-center">
                             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>map</span>
@@ -45,7 +45,7 @@ const HomeScreen = () => {
 
                     <button
                         className="bg-[#D85A30] text-white rounded-xl p-4 flex flex-col gap-3 items-start justify-center shadow-sm hover:opacity-90 transition-opacity min-h-[100px]"
-                        onClick={() => console.log('Ir a reportar barrera')}
+                        onClick={() => onNavigate('report')}
                     >
                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
@@ -114,7 +114,7 @@ const HomeScreen = () => {
                         </div>
                     </div>
 
-                    <button className="text-primary font-label-md flex items-center gap-1 w-fit mt-2 hover:opacity-80 transition-opacity min-h-[48px] px-2 -ml-2">
+                    <button onClick={() => onNavigate('map')} className="text-primary font-label-md flex items-center gap-1 w-fit mt-2 hover:opacity-80 transition-opacity min-h-[48px] px-2 -ml-2">
                         Ver todas en el mapa <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </button>
                 </section>
@@ -122,6 +122,7 @@ const HomeScreen = () => {
 
             {/* Floating Accessibility Button (FAB) */}
             <button
+                onClick={() => onNavigate('accessibility')}
                 aria-label="Accesibilidad"
                 className="fixed bottom-[80px] right-4 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] z-40 hover:scale-105 transition-transform group flex-row px-4 gap-2 w-auto min-w-[140px] h-[56px]"
             >
@@ -135,7 +136,7 @@ const HomeScreen = () => {
                 <a
                     className="flex flex-col items-center justify-center text-primary font-bold min-w-[48px] min-h-[48px] hover:bg-surface-variant/20 transition-all duration-200 rounded-lg p-1"
                     href="#"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
                 >
                     <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
                     <span className="font-label-sm mt-1">Inicio</span>
@@ -145,7 +146,7 @@ const HomeScreen = () => {
                 <a
                     className="flex flex-col items-center justify-center text-on-surface-variant min-w-[48px] min-h-[48px] hover:bg-surface-variant/20 transition-all rounded-lg p-1"
                     href="#"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => { e.preventDefault(); onNavigate('map'); }}
                 >
                     <span className="material-symbols-outlined text-[24px]">map</span>
                     <span className="font-label-sm mt-1">Mapa</span>
@@ -154,7 +155,7 @@ const HomeScreen = () => {
                 <a
                     className="flex flex-col items-center justify-center text-on-surface-variant min-w-[48px] min-h-[48px] hover:bg-surface-variant/20 transition-all rounded-lg p-1"
                     href="#"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => { e.preventDefault(); onNavigate('report'); }}
                 >
                     <span className="material-symbols-outlined text-[24px]">add_circle</span>
                     <span className="font-label-sm mt-1">Reportar</span>
@@ -163,7 +164,7 @@ const HomeScreen = () => {
                 <a
                     className="flex flex-col items-center justify-center text-on-surface-variant min-w-[48px] min-h-[48px] hover:bg-surface-variant/20 transition-all rounded-lg p-1"
                     href="#"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => { e.preventDefault(); onNavigate('profile'); }}
                 >
                     <span className="material-symbols-outlined text-[24px]">person</span>
                     <span className="font-label-sm mt-1">Perfil</span>
