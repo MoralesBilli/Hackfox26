@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { AccessibilityProvider } from './AccesibilidadContext';
+import { LanguageProvider } from './LanguageContext';
 
 // Importación de pantallas
 import FeedScreen from './FeedScreen';
@@ -62,8 +63,10 @@ function App() {
   return (
     // Envolvemos toda la aplicación en el Provider para que los estilos y filtros funcionen en todas las pantallas
     <AccessibilityProvider>
-      {screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />}
-      <ChatAsistente onNavigate={navigate} />
+      <LanguageProvider>
+        {screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />}
+        <ChatAsistente onNavigate={navigate} />
+      </LanguageProvider>
     </AccessibilityProvider>
   );
 }

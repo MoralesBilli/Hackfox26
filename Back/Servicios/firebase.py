@@ -22,6 +22,8 @@ if FIREBASE_CREDENTIALS.endswith('.json'):
 else:
     try:
         cred_dict = json.loads(FIREBASE_CREDENTIALS)
+        if isinstance(cred_dict, dict) and 'private_key' in cred_dict:
+            cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
         cred = credentials.Certificate(cred_dict)
     except Exception as e:
         raise ValueError(f"FIREBASE_CREDENTIALS no es una ruta de archivo .json válida ni una cadena JSON. Detalle: {e}")
