@@ -218,40 +218,48 @@ const MapScreen = () => {
     // ======================================================
 
     const searchPlace = async () => {
+    if (!search.trim()) return;
 
-        if (!search.trim()) return;
+    try {
+        // Cambiado de /buscar a /buscar_lugar
+        const response = await fetch(
+            `http://127.0.0.1:5000/buscar?q=${encodeURIComponent(search)}`
+        );
 
-        try {
-
-            const response = await fetch(
-                `http://127.0.0.1:5000/buscar?q=${encodeURIComponent(search)}`
-            );
-
-            const data = await response.json();
-
-            setSearchResults(data);
-
-            if (data.length > 0) {
-
-                const place = data[0];
-
-                const coords: LatLngTuple = [
-                    place.lat,
-                    place.lon
-                ];
-
-                setSelectedPlace(coords);
-
-                calculateRoute(coords);
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
         }
 
-    };
+        const data = await response.json();
+        
+        // Manejar posibles errores en la respuesta
+        if (data.error) {
+            console.error(data.error);
+            setSearchResults([]);
+            return;
+        }
+
+        setSearchResults(data);
+
+        if (data.length > 0) {
+            const place = data[0];
+            const coords: LatLngTuple = [
+                place.lat,
+                place.lon
+            ];
+            setSelectedPlace(coords);
+            calculateRoute(coords);
+        } else {
+            // No se encontraron resultados
+            setSearchResults([]);
+        }
+
+    } catch (error) {
+        console.error('Error en la búsqueda:', error);
+        setSearchResults([]);
+        // Opcional: Mostrar mensaje de error al usuario
+    }
+};
 
     // ======================================================
     // CALCULATE ROUTE

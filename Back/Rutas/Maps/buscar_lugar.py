@@ -4,10 +4,8 @@ import requests
 
 buscar_lugar_bp=Blueprint('buscar_lugar',__name__)
 
-@buscar_lugar_bp.route('/buscar_lugar',methods=['PUT'])
-
+@buscar_lugar_bp.route('/buscar', methods=['GET'])  # Cambiado a GET y ruta /buscar
 def buscar():
-
     query = request.args.get('q')
 
     if not query:
@@ -25,23 +23,29 @@ def buscar():
         "User-Agent": "TijuanaSinBarreras"
     }
 
-    response = requests.get(
-        url,
-        params=params,
-        headers=headers
-    )
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=10  # Añadir timeout
+        )
+        
+        response.raise_for_status()  # Lanzar error si la respuesta no es 200
+        
+        data = response.json()
 
-    data = response.json()
+        resultados = []
 
-    resultados = []
+        for item in data:
+            resultados.append({
+                "name": item["display_name"],
+                "lat": float(item["lat"]),
+                "lon": float(item["lon"])
+            })
 
-    for item in data:
-
-        resultados.append({
-            "name": item["display_name"],
-            "lat": float(item["lat"]),
-            "lon": float(item["lon"])
-        })
-
-    return jsonify(resultados)
-
+        return jsonify(resultados)
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error en la búsqueda: {e}")
+        return jsonify({"error": "Error al buscar el lugar"}), 500
