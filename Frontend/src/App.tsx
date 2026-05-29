@@ -15,6 +15,7 @@ import NavegacionActiva from './NavegacionActiva';
 import ReporteExitosoScreen from './ReporteExitosoScreen';
 import LoginScreen from './LoginScreen';
 import RegistroScreen from './RegistroScreen';
+import ChatAsistente from './ChatAsistente';
 
 type Screen =
   | 'feed'
@@ -62,6 +63,7 @@ function App() {
     // Envolvemos toda la aplicación en el Provider para que los estilos y filtros funcionen en todas las pantallas
     <AccessibilityProvider>
       {screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />}
+      <ChatAsistente onNavigate={navigate} />
     </AccessibilityProvider>
   );
 }

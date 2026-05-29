@@ -1,1 +1,4 @@
 .env
+credenciales_firebase.json
+__pycache__/
+*.pyc

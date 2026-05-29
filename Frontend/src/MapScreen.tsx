@@ -61,6 +61,8 @@ const DEFAULT_LOCATION: LatLngTuple = [
     -117.0373
 ];
 
+const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 function FlyToUser({ location, autoCenter }: { location: LatLngTuple | null; autoCenter: boolean }) {
     const map = useMap();
 
@@ -129,6 +131,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const [loadingLocation, setLoadingLocation] = useState(false);
     const [locationError, setLocationError] = useState('');
     const [autoCenter, setAutoCenter] = useState(true);
+    const [heading, setHeading] = useState<number | null>(null);
 
     // ======================================================
     // SEARCH
@@ -157,33 +160,47 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
     const getCurrentLocation = () => {
-        setLoadingLocation(true);
-        setLocationError('');
         setAutoCenter(true); // Forzar que el mapa se centre en el usuario
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                setUserLocation([lat, lng]);
-                setAccuracy(position.coords.accuracy);
-                setLoadingLocation(false);
-            },
-            (error) => {
-                console.error(error);
-                if (error.code === error.PERMISSION_DENIED) {
-                    setLocationError('Debes permitir acceso a ubicación');
-                } else {
-                    setLocationError('No se pudo obtener ubicación');
+        // Solicitar permisos de orientación de dispositivo si es iOS
+        const DeviceOrientationReq = (window as any).DeviceOrientationEvent;
+        if (DeviceOrientationReq && typeof DeviceOrientationReq.requestPermission === 'function') {
+            DeviceOrientationReq.requestPermission()
+                .then((permissionState: string) => {
+                    if (permissionState === 'granted') {
+                        console.log('Permiso de orientación concedido');
+                    }
+                })
+                .catch((err: any) => console.error(err));
+        }
+
+        if (!userLocation) {
+            setLoadingLocation(true);
+            setLocationError('');
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    setUserLocation([lat, lng]);
+                    setAccuracy(position.coords.accuracy);
+                    setLoadingLocation(false);
+                },
+                (error) => {
+                    console.error(error);
+                    if (error.code === error.PERMISSION_DENIED) {
+                        setLocationError('Debes permitir acceso a ubicación');
+                    } else {
+                        setLocationError('No se pudo obtener ubicación');
+                    }
+                    setLoadingLocation(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
                 }
-                setLoadingLocation(false);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 20000,
-                maximumAge: 0
-            }
-        );
+            );
+        }
     };
 
     // ======================================================
@@ -193,7 +210,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const loadIncidents = async () => {
         setLoadingIncidents(true);
         try {
-            const response = await fetch('http://127.0.0.1:5000/obtener_reportes');
+            const response = await fetch(`${apiUrl}/obtener_reportes`);
             
             if (!response.ok) {
                 throw new Error(`Error HTTP: ${response.status}`);
@@ -481,7 +498,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:5000/buscar?q=${encodeURIComponent(search)}`
+                `${apiUrl}/buscar?q=${encodeURIComponent(search)}`
             );
 
             if (!response.ok) {
@@ -526,19 +543,50 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
         return L.divIcon({
             className: '',
             html: `
-                <div style="
-                    width:20px;
-                    height:20px;
-                    background:#2563eb;
-                    border:4px solid white;
-                    border-radius:999px;
-                    box-shadow:0 0 10px rgba(0,0,0,.4);
-                "></div>
+                <div style="position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                    <!-- Contenedor rotado (cono de dirección) -->
+                    <div style="
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transform: rotate(${heading ?? 0}deg);
+                        transition: transform 0.2s ease-out;
+                        pointer-events: none;
+                        display: ${heading !== null ? 'flex' : 'none'};
+                    ">
+                        <!-- Cono de dirección apuntando al frente (arriba) -->
+                        <div style="
+                            width: 0;
+                            height: 0;
+                            border-left: 10px solid transparent;
+                            border-right: 10px solid transparent;
+                            border-bottom: 16px solid #2563eb;
+                            opacity: 0.35;
+                            position: absolute;
+                            top: -10px;
+                        "></div>
+                    </div>
+                    
+                    <!-- Punto central de ubicación -->
+                    <div style="
+                        width: 18px;
+                        height: 18px;
+                        background: #2563eb;
+                        border: 3.5px solid white;
+                        border-radius: 999px;
+                        box-shadow: 0 0 10px rgba(0,0,0,0.4);
+                        position: relative;
+                        z-index: 10;
+                    "></div>
+                </div>
             `,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
         });
-    }, []);
+    }, [heading]);
 
     // ======================================================
     // UTILIDADES DE DISTANCIA (Fórmula de Haversine)
@@ -576,9 +624,22 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const [radiusFilter, setRadiusFilter] = useState<number>(3); // Radio en km (3km por defecto)
     const [showRadiusFilter, setShowRadiusFilter] = useState<boolean>(true);
 
+    // Calcular si el usuario está muy lejos de Tijuana (> 50 km de Tijuana Centro)
+    const isFarFromTijuana = useMemo(() => {
+        if (!userLocation) return false;
+        const distToTijuanaCenter = calculateDistance(
+            userLocation[0],
+            userLocation[1],
+            32.5338,
+            -117.0373
+        );
+        return distToTijuanaCenter > 50;
+    }, [userLocation]);
+
     // Obtener incidentes que están dentro del radio seleccionado (1 a 5 km)
     const incidentsWithinRadius = useMemo(() => {
-        if (showRadiusFilter && userLocation) {
+        // Si el usuario está muy lejos de Tijuana (pruebas en desarrollo remoto), ignoramos el filtro de radio por defecto
+        if (showRadiusFilter && userLocation && !isFarFromTijuana) {
             return incidents.filter(incident => {
                 const distance = calculateDistance(
                     userLocation[0],
@@ -590,7 +651,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
             });
         }
         return incidents;
-    }, [incidents, userLocation, radiusFilter, showRadiusFilter]);
+    }, [incidents, userLocation, radiusFilter, showRadiusFilter, isFarFromTijuana]);
 
     // Filtrar los incidentes dentro del radio según el tipo/categoría seleccionado
     const filteredIncidents = useMemo(() => {
@@ -616,12 +677,71 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     // ======================================================
 
     useEffect(() => {
-        getCurrentLocation();
         loadIncidents();
         
         // Recargar incidentes cada 30 segundos
         const interval = setInterval(loadIncidents, 30000);
-        return () => clearInterval(interval);
+
+        setLoadingLocation(true);
+        setLocationError('');
+
+        let watchId: number | null = null;
+
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    setUserLocation([lat, lng]);
+                    setAccuracy(position.coords.accuracy);
+                    setLoadingLocation(false);
+                },
+                (error) => {
+                    console.error(error);
+                    if (error.code === error.PERMISSION_DENIED) {
+                        setLocationError('Debes permitir acceso a ubicación');
+                    } else {
+                        setLocationError('No se pudo obtener ubicación');
+                    }
+                    setLoadingLocation(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            setLocationError('Geolocalización no soportada');
+            setLoadingLocation(false);
+        }
+
+        return () => {
+            clearInterval(interval);
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+        };
+    }, []);
+
+    // Orientación del dispositivo (brújula)
+    useEffect(() => {
+        const handleOrientation = (e: any) => {
+            if (e.webkitCompassHeading !== undefined) {
+                setHeading(e.webkitCompassHeading);
+            } else if (e.alpha !== null && e.alpha !== undefined) {
+                setHeading(360 - e.alpha);
+            }
+        };
+
+        const hasAbsolute = 'ondeviceorientationabsolute' in window;
+        const eventName = hasAbsolute ? 'deviceorientationabsolute' : 'deviceorientation';
+
+        (window as any).addEventListener(eventName, handleOrientation);
+
+        return () => {
+            (window as any).removeEventListener(eventName, handleOrientation);
+        };
     }, []);
 
     // ======================================================
@@ -981,7 +1101,8 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                         />
 
-                                        <FlyToUser location={userLocation} />
+                                        <FlyToUser location={userLocation} autoCenter={autoCenter} />
+                                        <MapEventsHandler onManualInteraction={() => setAutoCenter(false)} />
                                         <FlyToPlace location={selectedPlace} />
 
                                         {/* USER */}
