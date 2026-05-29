@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 
 import {
+    Circle,
     CircleMarker,
     MapContainer,
     Marker,
@@ -482,23 +483,75 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     }, []);
 
     // ======================================================
-    // FILTERED INCIDENTS
+    // UTILIDADES DE DISTANCIA (Fórmula de Haversine)
     // ======================================================
 
-    const filteredIncidents = incidents.filter(inc => 
-        filterType === 'todos' ? true : inc.tipo === filterType
-    );
+    // Convertir grados a radianes
+    const toRadians = (degrees: number): number => {
+        return degrees * (Math.PI / 180);
+    };
 
+    // Calcular distancia entre dos coordenadas usando la fórmula de Haversine
+    const calculateDistance = (
+        lat1: number, 
+        lon1: number, 
+        lat2: number, 
+        lon2: number
+    ): number => {
+        const R = 6371; // Radio de la Tierra en km
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+        
+        const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
+
+    // ======================================================
+    // FILTROS Y ESTADOS DE DISTANCIA (Rango de 1 a 5 km)
+    // ======================================================
+    
+    const [radiusFilter, setRadiusFilter] = useState<number>(3); // Radio en km (3km por defecto)
+    const [showRadiusFilter, setShowRadiusFilter] = useState<boolean>(true);
+
+    // Obtener incidentes que están dentro del radio seleccionado (1 a 5 km)
+    const incidentsWithinRadius = useMemo(() => {
+        if (showRadiusFilter && userLocation) {
+            return incidents.filter(incident => {
+                const distance = calculateDistance(
+                    userLocation[0],
+                    userLocation[1],
+                    incident.latitud,
+                    incident.longitud
+                );
+                return distance <= radiusFilter;
+            });
+        }
+        return incidents;
+    }, [incidents, userLocation, radiusFilter, showRadiusFilter]);
+
+    // Filtrar los incidentes dentro del radio según el tipo/categoría seleccionado
+    const filteredIncidents = useMemo(() => {
+        return incidentsWithinRadius.filter(inc => 
+            filterType === 'todos' ? true : inc.tipo === filterType
+        );
+    }, [incidentsWithinRadius, filterType]);
+
+    // Calcular estadísticas dinámicas sobre los incidentes filtrados por radio
     const incidentStats = useMemo(() => {
-        const total = incidents.length;
-        const pendientes = incidents.filter(i => i.estado === 'pendiente').length;
-        const accidentes = incidents.filter(i => i.tipo === 'accidente_vial').length;
-        const peatonal = incidents.filter(i => i.tipo === 'Problema_peatonal').length;
-        const infraestructura = incidents.filter(i => i.tipo === 'infraestructura_dañada').length;
-        const emergencia = incidents.filter(i => i.tipo === 'emergencia_riesgo').length;
-        const discapacidad = incidents.filter(i => i.tipo === 'peligro_discapacidad').length;
+        const total = incidentsWithinRadius.length;
+        const pendientes = incidentsWithinRadius.filter(i => i.estado === 'pendiente').length;
+        const accidentes = incidentsWithinRadius.filter(i => i.tipo === 'accidente_vial').length;
+        const peatonal = incidentsWithinRadius.filter(i => i.tipo === 'Problema_peatonal').length;
+        const infraestructura = incidentsWithinRadius.filter(i => i.tipo === 'infraestructura_dañada').length;
+        const emergencia = incidentsWithinRadius.filter(i => i.tipo === 'emergencia_riesgo').length;
+        const discapacidad = incidentsWithinRadius.filter(i => i.tipo === 'peligro_discapacidad').length;
         return { total, pendientes, accidentes, peatonal, infraestructura, emergencia, discapacidad };
-    }, [incidents]);
+    }, [incidentsWithinRadius]);
 
     // ======================================================
     // INITIAL EFFECTS
@@ -727,6 +780,58 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 )}
                             </div>
 
+                            {/* DISTANCE RANGE FILTER */}
+                            <div className="p-5 border-b">
+                                <h3 className="font-semibold text-gray-800 mb-3">
+                                    Filtro por distancia
+                                </h3>
+                                
+                                <div className="space-y-3">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <span className="text-sm text-gray-600 font-medium">
+                                            Limitar por distancia (1-5 km)
+                                        </span>
+                                        <input
+                                            type="checkbox"
+                                            checked={showRadiusFilter}
+                                            onChange={(e) => setShowRadiusFilter(e.target.checked)}
+                                            className="toggle"
+                                        />
+                                    </label>
+                                    
+                                    {showRadiusFilter && (
+                                        <div className="space-y-2 pt-1">
+                                            <div className="flex justify-between text-xs font-semibold">
+                                                <span className="text-gray-500">Radio de búsqueda:</span>
+                                                <span className="text-primary">{radiusFilter} km</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="1"
+                                                max="5"
+                                                step="0.5"
+                                                value={radiusFilter}
+                                                onChange={(e) => setRadiusFilter(Number(e.target.value))}
+                                                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+                                            />
+                                            <div className="flex justify-between text-[10px] text-gray-400 font-medium px-0.5">
+                                                <span>1 km</span>
+                                                <span>2 km</span>
+                                                <span>3 km</span>
+                                                <span>4 km</span>
+                                                <span>5 km</span>
+                                            </div>
+                                            
+                                            {userLocation && (
+                                                <div className="mt-2.5 p-2 bg-gray-50 rounded-xl text-[11px] text-gray-600 leading-normal border border-gray-100">
+                                                    📍 Filtrando incidentes a menos de <span className="font-bold text-gray-800">{radiusFilter} km</span> de tu ubicación.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* LOCATION INFO */}
                             <div className="px-5 py-4 border-b bg-gray-50">
                                 {loadingLocation && (
@@ -837,6 +942,21 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                             <Marker position={selectedPlace}>
                                                 <Popup>Lugar encontrado</Popup>
                                             </Marker>
+                                        )}
+
+                                        {/* SEARCH RADIUS GEOGRAPHIC CIRCLE */}
+                                        {showRadiusFilter && userLocation && (
+                                            <Circle
+                                                center={userLocation}
+                                                radius={radiusFilter * 1000} // Convertir km a metros
+                                                pathOptions={{
+                                                    color: '#2563eb',
+                                                    fillColor: '#2563eb',
+                                                    fillOpacity: 0.05,
+                                                    weight: 1.5,
+                                                    dashArray: '6, 6'
+                                                }}
+                                            />
                                         )}
 
                                         {/* INCIDENTS */}
