@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // 1. Interfaz exacta para el payload del backend
 interface ReportPayload {
@@ -17,6 +19,7 @@ const ReportScreen = ({ onNavigate }: any) => {
     const [descripcion, setDescripcion] = useState<string>('');
     const [tipoBarrera, setTipoBarrera] = useState<string>('Sin rampa'); // Para los chips
     const [imagenBase64, setImagenBase64] = useState<string>('');
+    const [isObtainingLocation, setIsObtainingLocation] = useState<boolean>(true);
 
     // Estados de la UI
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -33,6 +36,11 @@ const ReportScreen = ({ onNavigate }: any) => {
 
     // Referencia para ocultar el selector de galería
     const galleryInputRef = useRef<HTMLInputElement>(null);
+
+    // Referencias para Leaflet Map
+    const mapContainerRef = useRef<HTMLDivElement>(null);
+    const mapRef = useRef<L.Map | null>(null);
+    const markerRef = useRef<L.Marker | null>(null);
 
     // Detener la cámara si el componente se desmonta
     useEffect(() => {
@@ -166,11 +174,13 @@ const ReportScreen = ({ onNavigate }: any) => {
     // 2. Obtener geolocalización al cargar la pantalla
     useEffect(() => {
         if ("geolocation" in navigator) {
+            setIsObtainingLocation(true);
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     setLatitude(position.coords.latitude);
                     setLongitude(position.coords.longitude);
                     setUbicacion(`${position.coords.latitude}, ${position.coords.longitude}`);
+                    setIsObtainingLocation(false);
                 },
                 (error) => {
                     console.warn("Error obteniendo ubicación:", error);
@@ -178,12 +188,74 @@ const ReportScreen = ({ onNavigate }: any) => {
                     setLatitude(32.5149);
                     setLongitude(-117.0382);
                     setUbicacion("32.5149, -117.0382");
+                    setIsObtainingLocation(false);
                 }
             );
         } else {
             setUbicacion("32.5149, -117.0382");
+            setIsObtainingLocation(false);
         }
     }, []);
+
+    // 2.1. Inicializar y actualizar mapa de Leaflet
+    useEffect(() => {
+        if (!mapContainerRef.current) return;
+
+        // Crear icono personalizado usando el Material Icon de Google con efecto de onda
+        const customIcon = L.divIcon({
+            html: `<div style="position: relative; width: 0; height: 0;">
+                     <!-- Onda de pulso expansivo (animación ping) -->
+                     <div class="absolute rounded-full bg-error/30 animate-ping" style="width: 40px; height: 40px; margin-left: -20px; margin-top: -20px; opacity: 0.8; z-index: 1;"></div>
+                     <!-- Núcleo central del marcador -->
+                     <div class="absolute rounded-full bg-error border-2 border-white" style="width: 10px; height: 10px; margin-left: -5px; margin-top: -5px; z-index: 2; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>
+                     <!-- Pin de localización con desplazamiento para apuntar al centro de la onda -->
+                     <div class="absolute" style="margin-left: -16px; margin-top: -32px; z-index: 3;">
+                       <span class="material-symbols-outlined text-[32px] text-error drop-shadow-md" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                     </div>
+                   </div>`,
+            className: 'custom-leaflet-pin',
+            iconSize: [0, 0],
+            iconAnchor: [0, 0]
+        });
+
+        if (!mapRef.current) {
+            mapRef.current = L.map(mapContainerRef.current, {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([latitude, longitude], 16);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(mapRef.current);
+
+            // Agregar el marcador nativo
+            markerRef.current = L.marker([latitude, longitude], { icon: customIcon }).addTo(mapRef.current);
+        } else {
+            mapRef.current.setView([latitude, longitude], 16);
+            if (markerRef.current) {
+                markerRef.current.setLatLng([latitude, longitude]);
+            }
+        }
+
+        // Suscribirse a redimensionamiento para forzar centrado y ajuste de tamaño
+        const handleResize = () => {
+            if (mapRef.current) {
+                mapRef.current.invalidateSize();
+                mapRef.current.setView([latitude, longitude]);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+                markerRef.current = null;
+            }
+        };
+    }, [latitude, longitude]);
 
     // 3. Manejador para convertir la imagen seleccionada a Base64
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -334,7 +406,7 @@ const ReportScreen = ({ onNavigate }: any) => {
                 {/* Tipo de barrera Section */}
                 <section className="flex flex-col gap-2">
                     <h3 className="font-label-md text-label-md text-on-surface font-bold">Tipo de barrera</h3>
-                    <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 -mx-margin-mobile px-margin-mobile">
+                    <div className="flex flex-wrap gap-2 pb-2">
                         {['Banqueta rota', 'Sin rampa', 'Obstáculo', 'Vehículo estacionado'].map((tipo) => (
                             <button
                                 key={tipo}
@@ -357,12 +429,21 @@ const ReportScreen = ({ onNavigate }: any) => {
                         <h3 className="font-label-md text-label-md text-on-surface font-bold">Ubicación</h3>
                         <button className="font-label-md text-label-md text-primary font-bold hover:underline touch-target-min px-2 py-1">Cambiar</button>
                     </div>
-                    <div className="rounded-xl overflow-hidden relative h-[120px] bg-surface-container border border-outline-variant">
-                        {/* Imagen de mapa genérica simulada */}
-                        <img alt="Mapa" className="w-full h-full object-cover" src="https://maps.googleapis.com/maps/api/staticmap?center=32.5149,-117.0382&zoom=15&size=600x300&maptype=roadmap&sensor=false" />
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <span className="material-symbols-outlined text-[32px] text-error drop-shadow-md" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-                        </div>
+                    <div className="rounded-xl overflow-hidden relative h-[200px] bg-surface-container border border-outline-variant">
+                        {/* Contenedor del mapa Leaflet */}
+                        <div ref={mapContainerRef} className="w-full h-full z-0" />
+                        
+                        {/* Indicador de Carga de Ubicación */}
+                        {isObtainingLocation && (
+                            <div className="absolute inset-0 bg-surface-container/95 z-[2000] flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
+                                <span className="material-symbols-outlined text-[32px] text-primary animate-spin">
+                                    progress_activity
+                                </span>
+                                <span className="font-label-md text-label-md text-on-surface-variant font-medium animate-pulse">
+                                    Obteniendo ubicación precisa...
+                                </span>
+                            </div>
+                        )}
                     </div>
                     <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-1">
                         <span className="material-symbols-outlined text-[16px]">my_location</span>
