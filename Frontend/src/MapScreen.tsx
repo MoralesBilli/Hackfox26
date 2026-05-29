@@ -1,219 +1,724 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    CircleMarker,
+    MapContainer,
+    Marker,
+    Polyline,
+    Popup,
+    TileLayer,
+    useMap
+} from 'react-leaflet';
 
-const MapScreen = ({ onNavigate }: any) => {
-    // Estado para controlar el input de búsqueda del mapa
-    const [searchQuery, setSearchQuery] = useState('');
+import L, { type LatLngTuple } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-    return (
-        <div className="bg-background text-on-background font-body-md h-screen w-screen overflow-hidden relative selection:bg-primary-container selection:text-on-primary-container">
-
-            {/* Inyectamos los estilos CSS personalizados del mapa directamente en el componente.
-        En un proyecto grande, podrías mover esto a tu archivo index.css
-      */}
-            <style>{`
-        .map-bg {
-          background-color: #e5e3df;
-          background-image: 
-            linear-gradient(45deg, #f0ede8 25%, transparent 25%, transparent 75%, #f0ede8 75%, #f0ede8),
-            linear-gradient(45deg, #f0ede8 25%, transparent 25%, transparent 75%, #f0ede8 75%, #f0ede8);
-          background-size: 20px 20px;
-          background-position: 0 0, 10px 10px;
-        }
-        .accessible-path {
-          position: absolute;
-          height: 6px;
-          background-color: #004e34;
-          border-radius: 3px;
-          transform-origin: left center;
-        }
-      `}</style>
-
-            {/* Top Navigation Container (Web - Hidden on Mobile) */}
-            <header className="hidden md:flex items-center px-4 h-14 w-full z-40 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container fixed top-0 left-0 right-0 shadow-sm">
-                <div className="flex items-center gap-4 w-full max-w-5xl mx-auto">
-                    <span 
-                        onClick={() => onNavigate('home')}
-                        className="material-symbols-outlined hover:opacity-90 active:scale-95 transition-transform cursor-pointer touch-target-min flex items-center justify-center"
-                    >
-                        arrow_back
-                    </span>
-                    <h1 className="font-headline-lg text-headline-lg flex-1">Tijuana Sin Barreras</h1>
-                    <nav className="flex items-center gap-6">
-                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => { e.preventDefault(); onNavigate('home'); }}>
-                            <span className="material-symbols-outlined">home</span>Inicio
-                        </a>
-                        <a className="text-on-primary hover:opacity-90 font-label-md text-label-md flex items-center gap-2 border-b-2 border-on-primary pb-1" href="#" onClick={e => { e.preventDefault(); onNavigate('map'); }}>
-                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>map</span>Mapa
-                        </a>
-                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => { e.preventDefault(); onNavigate('report'); }}>
-                            <span className="material-symbols-outlined">add_circle</span>Reportar
-                        </a>
-                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => { e.preventDefault(); onNavigate('profile'); }}>
-                            <span className="material-symbols-outlined">person</span>Perfil
-                        </a>
-                    </nav>
-                </div>
-            </header>
-
-            {/* Map Canvas (Simulated) */}
-            <main className="w-full h-full relative map-bg md:pt-14" data-location="Tijuana">
-
-                {/* Accessible Paths (Simulated) */}
-                <div className="accessible-path" style={{ top: '40%', left: '20%', width: '150px', transform: 'rotate(15deg)' }}></div>
-                <div className="accessible-path" style={{ top: '45%', left: '33%', width: '200px', transform: 'rotate(-10deg)' }}></div>
-                <div className="accessible-path" style={{ top: '38%', left: '50%', width: '120px', transform: 'rotate(45deg)' }}></div>
-
-                {/* Pins */}
-                {/* Barrier Pin 1 */}
-                <div className="absolute w-8 h-8 -ml-4 -mt-8 flex items-center justify-center cursor-pointer z-10" style={{ top: '50%', left: '40%' }}>
-                    <div className="bg-error text-on-error rounded-full w-8 h-8 flex items-center justify-center shadow-sm relative z-10">
-                        <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-                    </div>
-                    <div className="absolute bottom-[-4px] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-error"></div>
-                </div>
-
-                {/* Barrier Pin Cluster */}
-                <div className="absolute w-10 h-10 -ml-5 -mt-10 flex items-center justify-center cursor-pointer z-10" style={{ top: '30%', left: '60%' }}>
-                    <div className="bg-error text-on-error rounded-full w-10 h-10 flex items-center justify-center shadow-md relative z-10 border-2 border-surface">
-                        <span className="font-label-md text-label-md">3</span>
-                    </div>
-                </div>
-
-                {/* Service Pin (IMSS) */}
-                <div className="absolute w-8 h-8 -ml-4 -mt-8 flex items-center justify-center cursor-pointer z-10" style={{ top: '25%', left: '30%' }}>
-                    <div className="bg-secondary text-on-secondary rounded-full w-8 h-8 flex items-center justify-center shadow-sm relative z-10">
-                        <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_hospital</span>
-                    </div>
-                    <div className="absolute bottom-[-4px] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-secondary"></div>
-                </div>
-
-                {/* User Location */}
-                <div className="absolute w-12 h-12 -ml-6 -mt-6 flex items-center justify-center cursor-pointer z-20" style={{ top: '55%', left: '50%' }}>
-                    <div className="absolute w-full h-full bg-secondary-container/40 rounded-full animate-ping"></div>
-                    <div className="bg-secondary border-2 border-surface text-on-secondary rounded-full w-4 h-4 shadow-sm z-10"></div>
-                </div>
-
-                {/* Search Overlay (Mobile & Desktop Overlay) */}
-                <div className="absolute top-4 left-4 right-4 md:left-auto md:right-auto md:top-20 md:w-96 z-30 flex justify-center w-[calc(100%-32px)]">
-                    <div className="bg-surface rounded-full shadow-sm flex items-center w-full max-w-md h-[52px] px-2 border border-surface-variant">
-                        <button onClick={() => onNavigate('home')} className="w-[48px] h-[48px] flex items-center justify-center text-on-surface hover:bg-surface-variant/20 rounded-full transition-colors md:hidden">
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </button>
-                        <input
-                            className="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body-md text-body-md px-2 outline-none placeholder:text-on-surface-variant"
-                            placeholder="Buscar destino o lugar"
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <button className="w-[48px] h-[48px] flex items-center justify-center text-on-surface hover:bg-surface-variant/20 rounded-full transition-colors">
-                            <span className="material-symbols-outlined">mic</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* FAB for Accessibility (Right aligned, above bottom sheet) */}
-                <button onClick={() => onNavigate('accessibility')} aria-label="Accesibilidad" className="absolute right-4 bottom-[40%] md:bottom-24 w-[56px] h-[56px] bg-primary text-on-primary rounded-full shadow-sm flex items-center justify-center z-30 hover:scale-105 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
-                    <span className="sr-only">Accesibilidad</span>
-                </button>
-
-                {/* Text label for FAB on Desktop to comply with rules */}
-                <div className="hidden md:flex absolute right-4 bottom-[calc(24px+56px+8px)] bg-surface text-on-surface font-label-sm text-label-sm px-2 py-1 rounded shadow-sm z-30">
-                    Accesibilidad
-                </div>
-
-                {/* Bottom Sheet (Mobile) / Side Panel (Desktop) */}
-                <div className="absolute bottom-14 md:bottom-0 left-0 right-0 md:left-4 md:right-auto md:top-20 md:w-96 md:h-[calc(100vh-80px-56px)] bg-surface rounded-t-[16px] md:rounded-[16px] shadow-[0_-4px_12px_rgba(0,0,0,0.05)] md:shadow-sm z-30 flex flex-col max-h-[397px] md:max-h-none h-[35%] md:h-auto border border-surface-variant md:border-b-0 overflow-hidden">
-
-                    {/* Drag Handle (Mobile only) */}
-                    <div className="w-full flex justify-center pt-3 pb-1 md:hidden">
-                        <div className="w-8 h-1 bg-outline-variant rounded-full"></div>
-                    </div>
-
-                    {/* Sheet Header */}
-                    <div className="px-margin-mobile pt-2 pb-4 shrink-0">
-                        <h2 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface">Cerca de ti</h2>
-                        <p className="font-body-md text-body-md text-on-surface-variant">3 barreras en 500m</p>
-                    </div>
-
-                    {/* Horizontal Scroll List */}
-                    <div className="flex-1 overflow-x-auto overflow-y-hidden md:overflow-y-auto md:overflow-x-hidden flex md:flex-col gap-4 px-margin-mobile pb-4 snap-x">
-
-                        {/* Barrier Card 1 */}
-                        <div className="shrink-0 w-64 md:w-full bg-surface-container-low border border-surface-variant rounded-lg p-3 flex flex-col gap-2 snap-center h-full max-h-[120px] justify-between">
-                            <div className="flex gap-3">
-                                <div className="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-label-md text-label-md text-on-surface truncate">Banqueta Rota</h3>
-                                    <p className="font-label-sm text-label-sm text-on-surface-variant">A 150m</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Barrier Card 2 */}
-                        <div className="shrink-0 w-64 md:w-full bg-surface-container-low border border-surface-variant rounded-lg p-3 flex flex-col gap-2 snap-center h-full max-h-[120px] justify-between">
-                            <div className="flex gap-3">
-                                <div className="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>block</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-label-md text-label-md text-on-surface truncate">Rampa Obstruida</h3>
-                                    <p className="font-label-sm text-label-sm text-on-surface-variant">A 200m</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Barrier Card 3 */}
-                        <div className="shrink-0 w-64 md:w-full bg-surface-container-low border border-surface-variant rounded-lg p-3 flex flex-col gap-2 snap-center h-full max-h-[120px] justify-between">
-                            <div className="flex gap-3">
-                                <div className="w-10 h-10 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>construction</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-label-md text-label-md text-on-surface truncate">Obras en curso</h3>
-                                    <p className="font-label-sm text-label-sm text-on-surface-variant">A 450m</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="px-margin-mobile py-4 bg-surface border-t border-surface-variant flex gap-3 shrink-0">
-                        <button onClick={() => onNavigate('route-planner')} className="flex-1 h-[52px] border-2 border-primary text-primary font-label-md text-label-md rounded-lg flex items-center justify-center px-4 hover:bg-primary/5 active:bg-primary/10 transition-colors touch-target-min">
-                            Ver ruta accesible
-                        </button>
-                        <button onClick={() => onNavigate('route-planner')} className="flex-1 h-[52px] bg-primary text-on-primary font-label-md text-label-md rounded-lg flex items-center justify-center px-4 hover:bg-primary-container hover:text-on-primary-container active:scale-[0.98] transition-all touch-target-min">
-                            Cómo llegar
-                        </button>
-                    </div>
-                </div>
-            </main>
-
-            {/* BottomNavBar (Mobile) */}
-            <nav className="fixed bottom-0 w-full h-14 z-50 flex justify-around items-center px-margin-mobile bg-surface dark:bg-surface-container shadow-sm md:hidden pb-[env(safe-area-inset-bottom)]">
-                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => { e.preventDefault(); onNavigate('home'); }}>
-                    <span className="material-symbols-outlined">home</span>
-                    <span className="font-label-sm text-label-sm mt-1">Inicio</span>
-                </a>
-                <a className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min transition-all duration-200" href="#" onClick={e => { e.preventDefault(); onNavigate('map'); }}>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>map</span>
-                    <span className="font-label-sm text-label-sm mt-1">Mapa</span>
-                </a>
-                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => { e.preventDefault(); onNavigate('report'); }}>
-                    <span className="material-symbols-outlined">add_circle</span>
-                    <span className="font-label-sm text-label-sm mt-1">Reportar</span>
-                </a>
-                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => { e.preventDefault(); onNavigate('profile'); }}>
-                    <span className="material-symbols-outlined">person</span>
-                    <span className="font-label-sm text-label-sm mt-1">Perfil</span>
-                </a>
-            </nav>
-
-        </div>
-    );
+type ReportLocation = {
+    id: string;
+    title: string;
+    subtitle: string;
+    position: LatLngTuple;
 };
 
-export default MapScreen;
+type RoutePlan = {
+    coordinates: LatLngTuple[];
+    distanceKm: number;
+    durationMin: number;
+};
+
+const DEFAULT_LOCATION: LatLngTuple = [32.5338, -117.0373];
+
+
+function FlyToUser({
+    location
+}: {
+    location: LatLngTuple | null;
+}) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (location) {
+            map.flyTo(location, 18, {
+                duration: 1.5
+            });
+        }
+    }, [location]);
+
+    return null;
+}
+
+const MapScreen = () => {
+
+    // =========================
+    // USER LOCATION
+    // =========================
+
+    const [userLocation, setUserLocation] =
+        useState<LatLngTuple | null>(null);
+
+    const [accuracy, setAccuracy] =
+        useState<number | null>(null);
+
+    const [loadingLocation, setLoadingLocation] =
+        useState(false);
+
+    const [locationError, setLocationError] =
+        useState('');
+
+    // =========================
+    // ROUTE
+    // =========================
+
+    const [route, setRoute] =
+        useState<RoutePlan | null>(null);
+
+    // =========================
+    // GET LOCATION
+    // =========================
+
+    const getCurrentLocation = () => {
+
+        setLoadingLocation(true);
+        setLocationError('');
+
+        navigator.geolocation.getCurrentPosition(
+
+            (position) => {
+
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                setUserLocation([lat, lng]);
+
+                setAccuracy(position.coords.accuracy);
+
+                setLoadingLocation(false);
+            },
+
+            (error) => {
+
+                console.error(error);
+
+                if (error.code === error.PERMISSION_DENIED) {
+                    setLocationError(
+                        'Debes permitir acceso a ubicación'
+                    );
+                } else {
+                    setLocationError(
+                        'No se pudo obtener ubicación'
+                    );
+                }
+
+                setLoadingLocation(false);
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 20000,
+                maximumAge: 0
+            }
+        );
+    };
+
+    // =========================
+    // INITIAL LOCATION
+    // =========================
+
+    useEffect(() => {
+        getCurrentLocation();
+    }, []);
+
+    // =========================
+    // ROUTES
+    // =========================
+
+    const calculateRoute = async (
+        destination: LatLngTuple
+    ) => {
+
+        if (!userLocation) return;
+
+        try {
+
+            const fromLonLat =
+                `${userLocation[1]},${userLocation[0]}`;
+
+            const toLonLat =
+                `${destination[1]},${destination[0]}`;
+
+            const url =
+                `https://router.project-osrm.org/route/v1/driving/` +
+                `${fromLonLat};${toLonLat}` +
+                `?overview=full&geometries=geojson`;
+
+            const response = await fetch(url);
+
+            const data = await response.json();
+
+            if (!data.routes?.length) return;
+
+            const rawCoords =
+                data.routes[0].geometry.coordinates;
+
+            const coords: LatLngTuple[] =
+                rawCoords.map(
+                    (c: [number, number]) => [c[1], c[0]]
+                );
+
+            setRoute({
+                coordinates: coords,
+                distanceKm:
+                    data.routes[0].distance / 1000,
+                durationMin:
+                    data.routes[0].duration / 60
+            });
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // =========================
+    // USER MARKER ICON
+    // =========================
+
+    const userIcon = useMemo(() => {
+
+        return L.divIcon({
+            className: '',
+            html: `
+                <div
+                    style="
+                        width:20px;
+                        height:20px;
+                        background:#2563eb;
+                        border:4px solid white;
+                        border-radius:999px;
+                        box-shadow:0 0 10px rgba(0,0,0,.4);
+                    "
+                ></div>
+            `,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+    }, []);
+
+return (
+
+    <div className="w-full h-screen bg-[#f5f7fb] flex flex-col overflow-hidden">
+
+        {/* ======================================================
+            HEADER
+        ====================================================== */}
+
+        <header className="h-16 shrink-0 bg-primary text-white border-b border-white/10 shadow-md z-30">
+
+            <div className="w-full h-full max-w-7xl mx-auto px-4 flex items-center justify-between">
+
+                <div className="flex items-center gap-3">
+
+                    <button className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
+
+                        <span className="material-symbols-outlined">
+                            menu
+                        </span>
+
+                    </button>
+
+                    <div>
+
+                        <h1 className="text-lg font-bold leading-none">
+                            Tijuana Sin Barreras
+                        </h1>
+
+                        <p className="text-xs text-white/80">
+                            Mapa de accesibilidad urbana
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button
+                    onClick={getCurrentLocation}
+                    className="h-10 px-4 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-gray-100 transition-colors"
+                >
+                    Mi ubicación
+                </button>
+
+            </div>
+
+        </header>
+
+        {/* ======================================================
+            CONTENT
+        ====================================================== */}
+
+        <main className="flex-1 overflow-hidden">
+
+            <div className="w-full h-full max-w-7xl mx-auto p-4">
+
+                <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
+
+                    {/* ======================================================
+                        LEFT PANEL
+                    ====================================================== */}
+
+                    {/* ======================================================
+                        SEARCH PANEL
+                    ====================================================== */}
+
+                    <aside className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+
+                        {/* SEARCH HEADER */}
+
+                        <div className="p-5 border-b">
+
+                            <h2 className="text-xl font-bold text-gray-800">
+                                Buscar ubicación
+                            </h2>
+
+                            <p className="text-sm text-gray-500 mt-1">
+                                Encuentra lugares y calcula rutas
+                            </p>
+
+                        </div>
+
+                        {/* SEARCH BAR */}
+
+                        <div className="p-5 border-b">
+
+                            <div className="relative">
+
+                                <span
+                                    className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                                >
+                                    search
+                                </span>
+
+                                <input
+                                    type="text"
+                                    placeholder="Buscar calle, colonia o lugar..."
+                                    className="
+                                        w-full
+                                        h-14
+                                        rounded-2xl
+                                        border
+                                        border-gray-300
+                                        bg-gray-50
+                                        pl-12
+                                        pr-4
+                                        outline-none
+                                        focus:border-primary
+                                        focus:ring-4
+                                        focus:ring-primary/10
+                                        transition-all
+                                    "
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* LOCATION INFO */}
+
+                        <div className="px-5 py-4 border-b bg-gray-50">
+
+                            {loadingLocation && (
+
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+
+                                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                                        progress_activity
+                                    </span>
+
+                                    Obteniendo ubicación...
+
+                                </div>
+
+                            )}
+
+                            {locationError && (
+
+                                <div className="text-sm text-red-500">
+                                    {locationError}
+                                </div>
+
+                            )}
+
+                            {userLocation && (
+
+                                <div className="space-y-3">
+
+                                    <div className="flex items-center justify-between">
+
+                                        <div>
+
+                                            <p className="text-xs text-gray-500">
+                                                Precisión GPS
+                                            </p>
+
+                                            <p className="font-bold text-primary">
+                                                {Math.round(accuracy ?? 0)}m
+                                            </p>
+
+                                        </div>
+
+                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+
+                                            <span className="material-symbols-outlined">
+                                                my_location
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    <button
+                                        onClick={getCurrentLocation}
+                                        className="
+                                            w-full
+                                            h-12
+                                            rounded-xl
+                                            bg-primary
+                                            text-white
+                                            font-semibold
+                                            hover:opacity-90
+                                            transition-opacity
+                                        "
+                                    >
+                                        Actualizar ubicación
+                                    </button>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                        {/* QUICK ACTIONS */}
+
+                        <div className="p-5 flex flex-col gap-3">
+
+                            <button
+                                className="
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+                                    border
+                                    border-gray-200
+                                    hover:border-primary
+                                    hover:bg-primary/5
+                                    transition-all
+                                    flex
+                                    items-center
+                                    gap-4
+                                    px-4
+                                "
+                            >
+
+                                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+
+                                    <span className="material-symbols-outlined">
+                                        accessible
+                                    </span>
+
+                                </div>
+
+                                <div className="text-left">
+
+                                    <p className="font-semibold text-gray-800">
+                                        Rutas accesibles
+                                    </p>
+
+                                    <p className="text-xs text-gray-500">
+                                        Calles adaptadas
+                                    </p>
+
+                                </div>
+
+                            </button>
+
+                            <button
+                                className="
+                                    w-full
+                                    h-14
+                                    rounded-2xl
+                                    border
+                                    border-gray-200
+                                    hover:border-primary
+                                    hover:bg-primary/5
+                                    transition-all
+                                    flex
+                                    items-center
+                                    gap-4
+                                    px-4
+                                "
+                            >
+
+                                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+
+                                    <span className="material-symbols-outlined">
+                                        warning
+                                    </span>
+
+                                </div>
+
+                                <div className="text-left">
+
+                                    <p className="font-semibold text-gray-800">
+                                        Zonas con barreras
+                                    </p>
+
+                                    <p className="text-xs text-gray-500">
+                                        Reportes recientes
+                                    </p>
+
+                                </div>
+
+                            </button>
+
+                        </div>
+
+                    </aside>
+
+                    {/* ======================================================
+                        MAP SECTION
+                    ====================================================== */}
+
+                    <section className="flex flex-col gap-4 overflow-hidden">
+
+                        {/* MAP CARD */}
+
+                        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+
+                            {/* MAP TOPBAR */}
+
+                            <div className="h-16 border-b px-5 flex items-center justify-between shrink-0">
+
+                                <div>
+
+                                    <h2 className="font-bold text-gray-800">
+                                        Mapa interactivo
+                                    </h2>
+
+                                    <p className="text-sm text-gray-500">
+                                        Ubicación en tiempo real
+                                    </p>
+
+                                </div>
+
+                                <div className="flex items-center gap-2">
+
+                                </div>
+
+                            </div>
+
+                            {/* ======================================================
+                                MAP CONTAINER
+                            ====================================================== */}
+
+                            <div className="flex-1 relative min-h-[300px]">
+
+                                <MapContainer
+                                    center={userLocation || DEFAULT_LOCATION}
+                                    zoom={16}
+                                    className="w-full h-full z-0"
+                                    zoomControl={true}
+                                >
+
+                                    <TileLayer
+                                        attribution='&copy; OpenStreetMap contributors'
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
+
+                                    {/* USER LOCATION */}
+
+                                    <FlyToUser
+                                        location={userLocation}
+                                    />
+
+                                    {userLocation && (
+
+                                        <>
+
+                                            {/* ACCURACY AREA */}
+
+                                            <CircleMarker
+                                                center={userLocation}
+                                                radius={40}
+                                                pathOptions={{
+                                                    color: '#2563eb',
+                                                    fillColor: '#2563eb',
+                                                    fillOpacity: 0.15
+                                                }}
+                                            />
+
+                                            {/* USER MARKER */}
+
+                                            <Marker
+                                                position={userLocation}
+                                                icon={userIcon}
+                                                draggable={true}
+
+                                                eventHandlers={{
+
+                                                    dragend: (e) => {
+
+                                                        const marker =
+                                                            e.target;
+
+                                                        const pos =
+                                                            marker.getLatLng();
+
+                                                        setUserLocation([
+                                                            pos.lat,
+                                                            pos.lng
+                                                        ]);
+                                                    }
+                                                }}
+                                            >
+
+                                                <Popup>
+                                                    Tu ubicación actual
+                                                </Popup>
+
+                                            </Marker>
+
+                                        </>
+
+                                    )}
+
+                                   
+                                    {/* ROUTE */}
+
+                                    {route && (
+
+                                        <Polyline
+                                            positions={route.coordinates}
+                                            pathOptions={{
+                                                color: '#2563eb',
+                                                weight: 6
+                                            }}
+                                        />
+
+                                    )}
+
+                                </MapContainer>
+
+                            </div>
+
+                            {/* MAP FOOTER */}
+
+                            {route && (
+
+                                <div className="border-t px-5 py-4 bg-gray-50 shrink-0">
+
+                                    <div className="flex flex-wrap items-center gap-6">
+
+                                        <div>
+
+                                            <p className="text-xs text-gray-500">
+                                                Distancia
+                                            </p>
+
+                                            <p className="font-bold text-gray-800">
+                                                {route.distanceKm.toFixed(2)} km
+                                            </p>
+
+                                        </div>
+
+                                        <div>
+
+                                            <p className="text-xs text-gray-500">
+                                                Tiempo estimado
+                                            </p>
+
+                                            <p className="font-bold text-gray-800">
+                                                {route.durationMin.toFixed(0)} min
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+            </div>
+
+        </main>
+
+        {/* ======================================================
+            BOTTOM NAVIGATION
+        ====================================================== */}
+
+        <nav className="h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
+
+            <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+
+                <span className="material-symbols-outlined">
+                    home
+                </span>
+
+                <span className="text-xs mt-1">
+                    Inicio
+                </span>
+
+            </button>
+
+            <button className="flex flex-col items-center justify-center text-primary">
+
+                <span
+                    className="material-symbols-outlined"
+                    style={{
+                        fontVariationSettings: "'FILL' 1"
+                    }}
+                >
+                    map
+                </span>
+
+                <span className="text-xs font-semibold mt-1">
+                    Mapa
+                </span>
+
+            </button>
+
+            <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+
+                <span className="material-symbols-outlined">
+                    add_circle
+                </span>
+
+                <span className="text-xs mt-1">
+                    Reportar
+                </span>
+
+            </button>
+
+            <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+
+                <span className="material-symbols-outlined">
+                    person
+                </span>
+
+                <span className="text-xs mt-1">
+                    Perfil
+                </span>
+
+            </button>
+
+        </nav>
+
+    </div>
+
+);}
+
+export default MapScreen;   
