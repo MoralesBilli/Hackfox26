@@ -66,6 +66,7 @@ function App() {
       <LanguageProvider>
         {screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />}
         <ChatAsistente onNavigate={navigate} />
+        <Accesibilidad onNavigate={navigate} />
       </LanguageProvider>
     </AccessibilityProvider>
   );
