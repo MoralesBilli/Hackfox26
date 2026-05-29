@@ -104,7 +104,7 @@ function FlyToPlace({
 // COMPONENT
 // ======================================================
 
-const MapScreen = () => {
+const MapScreen = ({ onNavigate }: any) => {
 
     // ======================================================
     // USER LOCATION
@@ -804,7 +804,10 @@ const MapScreen = () => {
 
             <nav className="h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
 
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+                <button 
+                    onClick={() => onNavigate && onNavigate('home')}
+                    className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer"
+                >
 
                     <span className="material-symbols-outlined">
                         home
@@ -833,7 +836,10 @@ const MapScreen = () => {
 
                 </button>
 
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+                <button 
+                    onClick={() => onNavigate && onNavigate('report')}
+                    className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer"
+                >
 
                     <span className="material-symbols-outlined">
                         add_circle
@@ -845,7 +851,10 @@ const MapScreen = () => {
 
                 </button>
 
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+                <button 
+                    onClick={() => onNavigate && onNavigate('profile')}
+                    className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer"
+                >
 
                     <span className="material-symbols-outlined">
                         person

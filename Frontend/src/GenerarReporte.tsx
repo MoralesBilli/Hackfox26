@@ -42,6 +42,15 @@ const ReportScreen = ({ onNavigate }: any) => {
     const mapRef = useRef<L.Map | null>(null);
     const markerRef = useRef<L.Marker | null>(null);
 
+    // Verificar si el usuario está autenticado al acceder a esta vista
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Debes iniciar sesión para reportar una barrera.');
+            onNavigate('login');
+        }
+    }, [onNavigate]);
+
     // Detener la cámara si el componente se desmonta
     useEffect(() => {
         return () => {
