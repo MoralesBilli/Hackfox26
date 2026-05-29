@@ -29,7 +29,7 @@ def crear_reporte():
 
         # Imprimir logs de datos recibidos en el servidor
         print("-----------------------------------------")
-        print("📥 [BACKEND] Datos recibidos para creación de reporte:")
+        print("--> [BACKEND] Datos recibidos para creacion de reporte:")
         print("Latitud:", latitud)
         print("Longitud:", longitud)
         print("Descripción usuario:", descripcion_usuario)

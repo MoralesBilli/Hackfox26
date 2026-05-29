@@ -330,9 +330,11 @@ const ReportScreen = ({ onNavigate }: any) => {
             });
 
             const data = await response.json();
+            console.log("📥 [FRONTEND] Respuesta del servidor:", data);
 
             if (!response.ok) {
-                throw new Error(data.error || 'Error al enviar el reporte');
+                const errorText = data.detalle ? `${data.error} (Detalle: ${data.detalle})` : (data.error || 'Error al enviar el reporte');
+                throw new Error(errorText);
             }
 
             // Limpiar formulario tras éxito

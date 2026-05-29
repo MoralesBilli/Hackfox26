@@ -1,17 +1,16 @@
 import json
-from google import genai
-from google.genai import types
+import base64
+import requests
 from config import API_GEMINI
-
-# Inicializar cliente de Gemini
-genai_client = genai.Client(api_key=API_GEMINI)
 
 def analizar_reporte(image_bytes):
     """
-    Analiza una imagen en bytes con Gemini 2.5 Flash para determinar si
-    representa un problema de accesibilidad urbana o daño de infraestructura.
+    Analiza una imagen en bytes con Gemini 2.5 Flash mediante API REST directa
+    para determinar si representa un problema de accesibilidad urbana o daño de infraestructura.
     Retorna un diccionario con la clasificación de la IA.
     """
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_GEMINI}"
+    
     prompt = (
         "Analiza esta imagen y clasifícala estrictamente dentro de la siguiente estructura jerárquica de reporte urbano. "
         "Si la imagen no corresponde a ninguna de estas categorías/subcategorías, establece 'es_valido' como false.\n\n"
@@ -53,19 +52,59 @@ def analizar_reporte(image_bytes):
         "}"
     )
 
-    response = genai_client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=[
-            types.Part.from_bytes(
-                data=image_bytes,
-                mime_type='image/jpeg'
-            ),
-            prompt
-        ],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json"
-        )
-    )
+    # Codificar imagen a Base64 para el payload inlineData
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
-    # Parsear y retornar JSON
-    return json.loads(response.text)
+    print("--------------------------------------------------")
+    print("[GEMINI SERVICE] Iniciando llamada a Gemini REST API...")
+    print(f"MimeType de imagen: image/jpeg")
+    print(f"Tamaño de imagen Base64: {len(image_b64)} caracteres")
+    print("--------------------------------------------------")
+
+    # Estructura del cuerpo de la petición REST multimodal
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "inlineData": {
+                            "mimeType": "image/jpeg",
+                            "data": image_b64
+                        }
+                    },
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+    except Exception as e:
+        print(f"[GEMINI SERVICE] [ERROR] Error al realizar la petición HTTP: {str(e)}")
+        raise e
+
+    print(f"[GEMINI SERVICE] Status code devuelto: {response.status_code}")
+
+    if response.status_code == 200:
+        data = response.json()
+        print(f"[GEMINI SERVICE] Respuesta JSON cruda de la API: {json.dumps(data, indent=2)}")
+        try:
+            texto_respuesta = data['candidates'][0]['content']['parts'][0]['text']
+            print(f"[GEMINI SERVICE] Texto extraido: {texto_respuesta}")
+            return json.loads(texto_respuesta)
+        except (KeyError, IndexError, json.JSONDecodeError) as e:
+            print(f"[GEMINI SERVICE] [ERROR] Fallo al parsear respuesta o JSON invalido: {str(e)}")
+            raise ValueError(f"Error al procesar el formato de respuesta de Gemini: {str(e)}")
+    else:
+        print(f"[GEMINI SERVICE] [ERROR] Error devuelto por API: {response.status_code} - {response.text}")
+        raise ValueError(f"Error {response.status_code} de la API de Gemini: {response.text}")
