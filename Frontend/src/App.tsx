@@ -14,6 +14,8 @@ import PlaneadorDeRuta from './PlaneadorDeRuta';
 import NavegacionActiva from './NavegacionActiva';
 import OnBoardingScreen from './OnBoardingScreen';
 import ReporteExitosoScreen from './ReporteExitosoScreen';
+import LoginScreen from './LoginScreen';
+import RegistroScreen from './RegistroScreen';
 
 type Screen =
   | 'feed'
@@ -24,14 +26,22 @@ type Screen =
   | 'route-planner'
   | 'active-nav'
   | 'onboarding'
-  | 'success-report';
+  | 'success-report'
+  | 'login'
+  | 'registro';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('feed');
 
   const navigate = (screen: string) => {
     // 'home' redirige al feed principal
-    const target = screen === 'home' ? 'feed' : screen;
+    let target = screen === 'home' ? 'feed' : screen;
+    
+    // Interceptar pantallas protegidas si no hay token de autenticación
+    if ((target === 'profile' || target === 'report') && !localStorage.getItem('token')) {
+      target = 'login';
+    }
+    
     setCurrentScreen(target as Screen);
   };
 
@@ -45,6 +55,8 @@ function App() {
     'active-nav': <NavegacionActiva onNavigate={navigate} />,
     onboarding: <OnBoardingScreen onNavigate={navigate} />,
     'success-report': <ReporteExitosoScreen onNavigate={navigate} />,
+    login: <LoginScreen onNavigate={navigate} />,
+    registro: <RegistroScreen onNavigate={navigate} />,
   };
 
   return (

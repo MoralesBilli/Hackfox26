@@ -63,7 +63,11 @@ const RegistroScreen = ({ onNavigate }: any) => {
                 body: JSON.stringify(datosParaEnviar),
             });
 
-            const data = await response.json();
+            let data: any = {};
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            }
 
             if (response.ok) {
                 alert(`¡Usuario creado exitosamente!`);

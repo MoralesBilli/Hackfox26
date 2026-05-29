@@ -37,7 +37,6 @@ const LoginScreen = ({ onNavigate }: any) => {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
         try {
-            // Reemplaza "http://localhost:8000" con la URL real de tu backend (ej. tu servidor de Python)
             const response = await fetch(`${apiUrl}/iniciar_sesion`, {
                 method: 'POST',
                 headers: {
@@ -46,11 +45,15 @@ const LoginScreen = ({ onNavigate }: any) => {
                 body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            let data: any = {};
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            }
 
             if (!response.ok) {
-                // Si el backend devuelve un error (ej. 401 Unauthorized)
-                throw new Error(data.detail || 'Correo o contraseña incorrectos');
+                // Si el backend devuelve un error (ej. 401 o 502)
+                throw new Error(data.error || data.detail || 'Correo o contraseña incorrectos');
             }
 
             // Si todo sale bien, la descripción de tu API dice que devuelve los tokens y el perfil
@@ -59,6 +62,9 @@ const LoginScreen = ({ onNavigate }: any) => {
             // Guardar el token en localStorage
             if (data.token) {
                 localStorage.setItem('token', data.token);
+            }
+            if (data.usuario) {
+                localStorage.setItem('usuario', JSON.stringify(data.usuario));
             }
 
             alert('¡Sesión iniciada con éxito!');

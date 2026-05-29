@@ -1,12 +1,28 @@
 import React from 'react';
 
 const ProfileScreen = ({ onNavigate }: any) => {
+    // Obtener datos del usuario desde localStorage
+    const savedUser = localStorage.getItem('usuario');
+    const user = savedUser ? JSON.parse(savedUser) : null;
+
+    // Calcular nombre, email e iniciales dinámicas
+    const nombres = user ? `${user.nombres || ''} ${user.apellidoPa || ''} ${user.apellidoMa || ''}`.trim() : 'Eduardo Vázquez';
+    const email = user ? user.correo : 'eduardo.vazquez@example.com';
+    
+    let iniciales = 'EV';
+    if (user && user.nombres && user.apellidoPa) {
+        iniciales = `${user.nombres[0] || ''}${user.apellidoPa[0] || ''}`.toUpperCase();
+    } else if (user && user.nombres) {
+        iniciales = `${user.nombres[0] || ''}${user.nombres[1] || ''}`.toUpperCase();
+    }
+
     // Función simulada para cerrar sesión
     const handleLogout = () => {
         const confirmar = window.confirm('¿Estás seguro de que deseas cerrar sesión?');
         if (confirmar) {
             console.log('Cerrando sesión...');
             localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
             alert('Sesión cerrada exitosamente');
             onNavigate('onboarding');
         }
@@ -41,10 +57,10 @@ const ProfileScreen = ({ onNavigate }: any) => {
                 {/* Profile Header Area */}
                 <section className="px-margin-mobile flex flex-col items-center pt-4 pb-2">
                     <div className="w-24 h-24 rounded-full bg-primary-container flex items-center justify-center mb-4 shadow-sm border-2 border-surface-container-lowest">
-                        <span className="font-app-title text-app-title text-on-primary-container">EV</span>
+                        <span className="font-app-title text-app-title text-on-primary-container">{iniciales}</span>
                     </div>
-                    <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Eduardo Vázquez</h2>
-                    <p className="font-label-md text-label-md text-on-surface-variant mt-1">Tijuana, BC</p>
+                    <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">{nombres}</h2>
+                    <p className="font-label-md text-label-md text-on-surface-variant mt-1">{email}</p>
                 </section>
 
                 {/* Metric Row */}
