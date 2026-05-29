@@ -7,8 +7,18 @@ from datetime import datetime
 import uuid
 
 # Cargar credenciales: puede ser una ruta de archivo local o una cadena JSON en la nube
-if FIREBASE_CREDENTIALS.endswith('.json') and os.path.exists(FIREBASE_CREDENTIALS):
-    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+if FIREBASE_CREDENTIALS.endswith('.json'):
+    # Si la ruta no es absoluta, resolverla de manera absoluta respecto a la raíz del backend
+    if not os.path.isabs(FIREBASE_CREDENTIALS):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cert_path = os.path.join(base_dir, FIREBASE_CREDENTIALS)
+    else:
+        cert_path = FIREBASE_CREDENTIALS
+
+    if os.path.exists(cert_path):
+        cred = credentials.Certificate(cert_path)
+    else:
+        raise ValueError(f"No se encontró el archivo de credenciales de Firebase en la ruta: {cert_path}")
 else:
     try:
         cred_dict = json.loads(FIREBASE_CREDENTIALS)

@@ -524,9 +524,9 @@ const ReportScreen = ({ onNavigate }: any) => {
                 </button>
                 <button
                     onClick={() => onNavigate && onNavigate('report')}
-                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                    className="flex items-center justify-center text-primary font-bold w-12 h-12 bg-surface-variant/30 rounded-full transition-all duration-200 active:scale-90"
                 >
-                    <span className="material-symbols-outlined">add_circle</span>
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
                 </button>
                 <button
                     onClick={() => onNavigate && onNavigate('profile')}

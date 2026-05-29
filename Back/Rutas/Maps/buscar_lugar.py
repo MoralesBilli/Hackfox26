@@ -13,10 +13,21 @@ def buscar():
 
     url = "https://nominatim.openstreetmap.org/search"
 
+    # Bounding box para Tijuana: Oeste, Norte, Este, Sur
+    viewbox = "-117.27,32.55,-116.70,32.34"
+
+    # Asegurar la búsqueda local en Tijuana si no fue especificada por el usuario
+    if "tijuana" not in query.lower() and "tj" not in query.lower():
+        full_query = f"{query}, Tijuana"
+    else:
+        full_query = query
+
     params = {
-        "q": query,
+        "q": full_query,
         "format": "json",
-        "limit": 5
+        "limit": 5,
+        "viewbox": viewbox,
+        "bounded": 1
     }
 
     headers = {

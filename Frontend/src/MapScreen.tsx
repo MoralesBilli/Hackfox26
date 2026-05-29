@@ -61,20 +61,37 @@ const DEFAULT_LOCATION: LatLngTuple = [
     -117.0373
 ];
 
-// ======================================================
-// FLY TO USER
-// ======================================================
-
-function FlyToUser({ location }: { location: LatLngTuple | null }) {
+function FlyToUser({ location, autoCenter }: { location: LatLngTuple | null; autoCenter: boolean }) {
     const map = useMap();
 
     useEffect(() => {
-        if (location) {
-            map.flyTo(location, 18, {
-                duration: 1.5
+        if (location && autoCenter) {
+            map.flyTo(location, map.getZoom() > 14 ? map.getZoom() : 18, {
+                duration: 1.2
             });
         }
-    }, [location, map]);
+    }, [location, autoCenter, map]);
+
+    return null;
+}
+
+// ======================================================
+// MAP EVENTS HANDLER (DETECT MANUAL PANNING/ZOOMING)
+// ======================================================
+
+function MapEventsHandler({ onManualInteraction }: { onManualInteraction: () => void }) {
+    const map = useMap();
+    useEffect(() => {
+        const handler = () => {
+            onManualInteraction();
+        };
+        map.on('dragstart', handler);
+        map.on('zoomstart', handler);
+        return () => {
+            map.off('dragstart', handler);
+            map.off('zoomstart', handler);
+        };
+    }, [map, onManualInteraction]);
 
     return null;
 }
@@ -111,6 +128,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const [accuracy, setAccuracy] = useState<number | null>(null);
     const [loadingLocation, setLoadingLocation] = useState(false);
     const [locationError, setLocationError] = useState('');
+    const [autoCenter, setAutoCenter] = useState(true);
 
     // ======================================================
     // SEARCH
@@ -125,6 +143,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     // ======================================================
 
     const [route, setRoute] = useState<RoutePlan | null>(null);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     // ======================================================
     // INCIDENTES
@@ -137,13 +156,10 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const [filterType, setFilterType] = useState<string>('todos');
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
-    // ======================================================
-    // GET CURRENT LOCATION
-    // ======================================================
-
     const getCurrentLocation = () => {
         setLoadingLocation(true);
         setLocationError('');
+        setAutoCenter(true); // Forzar que el mapa se centre en el usuario
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -353,7 +369,13 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                         distance: route.distance
                     }));
                     
-                    routesWithScore.sort((a: any, b: any) => a.score - b.score);
+                    // Ordenar: primero menor score de incidentes (seguridad), luego menor distancia (recorrido)
+                    routesWithScore.sort((a: any, b: any) => {
+                        if (a.score !== b.score) {
+                            return a.score - b.score;
+                        }
+                        return a.distance - b.distance;
+                    });
                     
                     const bestRoute = routesWithScore[0].route;
                     const coords = bestRoute.geometry.coordinates.map(
@@ -393,26 +415,61 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
         try {
             const fromLonLat = `${userLocation[1]},${userLocation[0]}`;
             const toLonLat = `${destination[1]},${destination[0]}`;
-            const url = `https://router.project-osrm.org/route/v1/driving/${fromLonLat};${toLonLat}?overview=full&geometries=geojson`;
+            const url = `https://router.project-osrm.org/route/v1/driving/${fromLonLat};${toLonLat}?overview=full&geometries=geojson&alternatives=true`;
 
             const response = await fetch(url);
             const data = await response.json();
 
             if (!data.routes?.length) return;
 
-            const rawCoords = data.routes[0].geometry.coordinates;
-            const coords: LatLngTuple[] = rawCoords.map(
+            // Ordenar las rutas puramente por distancia ascendente (menor recorrido)
+            const sortedRoutes = [...data.routes].sort((a: any, b: any) => a.distance - b.distance);
+            const primaryRoute = sortedRoutes[0];
+            const coords: LatLngTuple[] = primaryRoute.geometry.coordinates.map(
                 (c: [number, number]) => [c[1], c[0]]
             );
 
             setRoute({
                 coordinates: coords,
-                distanceKm: data.routes[0].distance / 1000,
-                durationMin: data.routes[0].duration / 60
+                distanceKm: primaryRoute.distance / 1000,
+                durationMin: primaryRoute.duration / 60,
+                alternativeRoutes: sortedRoutes.slice(1, 3).map((r: any) => ({
+                    coordinates: r.geometry.coordinates.map(
+                        (c: [number, number]) => [c[1], c[0]] as LatLngTuple
+                    ),
+                    distanceKm: r.distance / 1000,
+                    durationMin: r.duration / 60
+                }))
             });
         } catch (error) {
             console.error(error);
         }
+    };
+
+    // ======================================================
+    // SELECT ALTERNATIVE ROUTE (SWAP PRINCIPAL <-> ALTERNATIVE)
+    // ======================================================
+
+    const handleSelectRoute = (selected: RoutePlan) => {
+        if (!route) return;
+
+        const currentMainRoute: RoutePlan = {
+            coordinates: route.coordinates,
+            distanceKm: route.distanceKm,
+            durationMin: route.durationMin
+        };
+
+        const newAlternativeRoutes = [
+            currentMainRoute,
+            ...(route.alternativeRoutes || [])
+        ].filter(r => r !== selected);
+
+        setRoute({
+            coordinates: selected.coordinates,
+            distanceKm: selected.distanceKm,
+            durationMin: selected.durationMin,
+            alternativeRoutes: newAlternativeRoutes
+        });
     };
 
     // ======================================================
@@ -445,6 +502,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 const place = data[0];
                 const coords: LatLngTuple = [place.lat, place.lon];
                 setSelectedPlace(coords);
+                setIsSidebarCollapsed(true); // Colapsar el panel para mostrar el mapa más grande
                 
                 if (avoidIncidents) {
                     await calculateRouteAvoidingIncidents(coords);
@@ -600,9 +658,15 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
             {/* CONTENT */}
             <main className="flex-1 overflow-hidden">
                 <div className="w-full h-full max-w-7xl mx-auto p-4">
-                    <div className="w-full h-full grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
+                    <div className={`w-full h-full grid gap-4 transition-all duration-300 ${
+                        isSidebarCollapsed 
+                            ? 'grid-cols-1' 
+                            : 'grid-cols-1 lg:grid-cols-[380px_1fr]'
+                    }`}>
                         {/* SIDEBAR */}
-                        <aside className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col overflow-y-auto">
+                        <aside className={`bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col overflow-y-auto transition-all duration-300 ${
+                            isSidebarCollapsed ? 'hidden' : 'flex'
+                        }`}>
                             {/* HEADER */}
                             <div className="p-5 border-b">
                                 <h2 className="text-xl font-bold text-gray-800">
@@ -645,6 +709,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                             onClick={() => {
                                                 const coords: LatLngTuple = [place.lat, place.lon];
                                                 setSelectedPlace(coords);
+                                                setIsSidebarCollapsed(true); // Colapsar el panel al seleccionar
                                                 if (avoidIncidents) {
                                                     calculateRouteAvoidingIncidents(coords);
                                                 } else {
@@ -894,6 +959,17 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
                                 {/* MAP */}
                                 <div className="flex-1 relative min-h-[300px]">
+                                    {/* Botón flotante para expandir/colapsar panel */}
+                                    <button
+                                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                        className="absolute top-4 left-4 z-[1000] w-10 h-10 bg-white hover:bg-gray-100 text-gray-700 rounded-xl shadow-md border border-gray-250 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                                        title={isSidebarCollapsed ? "Mostrar buscador y filtros" : "Ocultar panel de búsqueda"}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">
+                                            {isSidebarCollapsed ? 'search' : 'arrow_back'}
+                                        </span>
+                                    </button>
+
                                     <MapContainer
                                         center={userLocation || DEFAULT_LOCATION}
                                         zoom={16}
@@ -1032,9 +1108,13 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                         positions={altRoute.coordinates}
                                                         pathOptions={{
                                                             color: '#9ca3af',
-                                                            weight: 3,
-                                                            opacity: 0.5,
-                                                            dashArray: '5, 5'
+                                                            weight: 6,
+                                                            opacity: 0.6,
+                                                            dashArray: '5, 8',
+                                                            className: 'cursor-pointer'
+                                                        }}
+                                                        eventHandlers={{
+                                                            click: () => handleSelectRoute(altRoute)
                                                         }}
                                                     />
                                                 ))}
@@ -1043,28 +1123,54 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     </MapContainer>
                                 </div>
 
-                                {/* ROUTE INFO */}
+                                {/* ROUTE INFO & SELECTOR */}
                                 {route && (
-                                    <div className="border-t px-5 py-4 bg-gray-50 shrink-0">
-                                        <div className="flex flex-wrap items-center gap-6">
-                                            <div>
-                                                <p className="text-xs text-gray-500">Distancia</p>
-                                                <p className="font-bold text-gray-800">
-                                                    {route.distanceKm.toFixed(2)} km
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Tiempo estimado</p>
-                                                <p className="font-bold text-gray-800">
-                                                    {route.durationMin.toFixed(0)} min
-                                                </p>
-                                            </div>
-                                            {avoidIncidents && incidents.length > 0 && (
-                                                <div className="text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                                                    🛡️ Ruta optimizada evitando incidentes
+                                    <div className="border-t px-5 py-4 bg-gray-50 shrink-0 flex flex-col gap-3">
+                                        <h4 className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">
+                                            Rutas sugeridas (toca para cambiar)
+                                        </h4>
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            {/* Ruta Activa */}
+                                            <button 
+                                                className="flex-1 p-3 rounded-xl bg-primary/10 border-2 border-primary text-left transition-all flex items-center justify-between"
+                                                onClick={() => {}}
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] font-extrabold text-primary uppercase">Ruta Activa</p>
+                                                    <p className="text-sm font-black text-gray-800 truncate">
+                                                        {route.distanceKm.toFixed(2)} km • {route.durationMin.toFixed(0)} min
+                                                    </p>
                                                 </div>
-                                            )}
+                                                <span className="material-symbols-outlined text-primary shrink-0">
+                                                    check_circle
+                                                </span>
+                                            </button>
+
+                                            {/* Rutas Alternativas */}
+                                            {route.alternativeRoutes && route.alternativeRoutes.map((altRoute, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleSelectRoute(altRoute)}
+                                                    className="flex-1 p-3 rounded-xl bg-white border border-gray-250 hover:border-gray-400 hover:shadow-sm active:scale-[0.99] text-left transition-all flex items-center justify-between cursor-pointer"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <p className="text-[10px] font-bold text-gray-500 uppercase font-bold">Alternativa {idx + 1}</p>
+                                                        <p className="text-sm font-semibold text-gray-700 truncate">
+                                                            {altRoute.distanceKm.toFixed(2)} km • {altRoute.durationMin.toFixed(0)} min
+                                                        </p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-gray-400 shrink-0">
+                                                        alt_route
+                                                    </span>
+                                                </button>
+                                            ))}
                                         </div>
+                                        {avoidIncidents && incidents.length > 0 && (
+                                            <div className="text-[11px] text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100 flex items-center gap-1.5 w-fit font-medium">
+                                                <span>🛡️</span>
+                                                <span>Ruta optimizada para evitar barreras urbanas reportadas.</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
