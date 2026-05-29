@@ -267,7 +267,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
-                            <img alt="Logo App" className="w-full h-full object-cover" src="src\assets\Sin nombre.png" />
+                            <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
                         </div>
                         <h1 
                             className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
