@@ -67,7 +67,30 @@ const translations: Record<Language, Record<string, string>> = {
         chip_call_911: 'Llamar 911',
         chat_model_opened_map: 'Te he llevado al mapa interactivo. Aquí puedes visualizar incidentes en tiempo real, filtrar reportes por radio y buscar direcciones.',
         chat_model_called_911: 'He iniciado la llamada al número de emergencias 911. Por favor mantén la calma y describe tu situación.',
-        chat_conn_error: 'Error de conexión. Asegúrate de que el servidor esté activo y vuelve a intentarlo.'
+        chat_conn_error: 'Error de conexión. Asegúrate de que el servidor esté activo y vuelve a intentarlo.',
+
+        // Feed & Symbolology
+        symbol_title: 'Simbología',
+        symbol_subtitle: 'Identifica los reportes comunitarios y barreras de accesibilidad según su color asignado:',
+        symbol_desc_accident: 'Choques o bloqueos vehiculares graves en calzada.',
+        symbol_desc_pedestrian: 'Obstáculos en banquetas, cruces o semáforos peatonales dañados.',
+        symbol_desc_infrastructure: 'Baches, escombros abandonados, grietas y aceras rotas.',
+        symbol_desc_emergency: 'Cables eléctricos expuestos, incendios o hoyos peligrosos profundos.',
+        symbol_desc_mobility: 'Bloqueo de rampas para sillas de ruedas o accesos adaptados.',
+        feed_loading: 'Cargando reportes en tiempo real...',
+        feed_no_reports: 'No hay reportes activos en este momento.',
+        feed_update_btn: 'Actualizar',
+        feed_active_count: 'reportes activos',
+        feed_notifications: 'Notificaciones',
+        feed_show_map: 'Ver en mapa',
+        cat_citizen_report: 'Reporte Ciudadano',
+        cat_traffic_accident: 'Accidente Vial',
+        cat_pedestrian_problem: 'Problema Peatonal',
+        cat_damaged_infrastructure: 'Infraestructura',
+        cat_emergency_risk: 'Emergencia / Riesgo',
+        cat_disability_hazard: 'Peligro Movilidad',
+        status_pending: 'Pendiente',
+        status_verified: 'Verificado'
     },
     en: {
         // App / Navigation
@@ -125,7 +148,30 @@ const translations: Record<Language, Record<string, string>> = {
         chip_call_911: 'Call 911',
         chat_model_opened_map: 'I have taken you to the interactive map. Here you can visualize incidents in real time, filter reports by radius, and search for addresses.',
         chat_model_called_911: 'I have started the call to the emergency number 911. Please stay calm and describe your situation.',
-        chat_conn_error: 'Connection error. Make sure the server is active and try again.'
+        chat_conn_error: 'Connection error. Make sure the server is active and try again.',
+
+        // Feed & Symbolology
+        symbol_title: 'Symbolology',
+        symbol_subtitle: 'Identify community reports and accessibility barriers by their assigned color:',
+        symbol_desc_accident: 'Collisions or serious vehicle blockages on the road.',
+        symbol_desc_pedestrian: 'Obstacles on sidewalks, crossings or damaged pedestrian signals.',
+        symbol_desc_infrastructure: 'Potholes, abandoned debris, cracks and broken sidewalks.',
+        symbol_desc_emergency: 'Exposed electrical cables, fires or deep dangerous holes.',
+        symbol_desc_mobility: 'Blocking of wheelchair ramps or adapted accesses.',
+        feed_loading: 'Loading real-time reports...',
+        feed_no_reports: 'No active reports at this moment.',
+        feed_update_btn: 'Update',
+        feed_active_count: 'active reports',
+        feed_notifications: 'Notifications',
+        feed_show_map: 'View on map',
+        cat_citizen_report: 'Citizen Report',
+        cat_traffic_accident: 'Traffic Accident',
+        cat_pedestrian_problem: 'Pedestrian Issue',
+        cat_damaged_infrastructure: 'Infrastructure',
+        cat_emergency_risk: 'Emergency / Risk',
+        cat_disability_hazard: 'Mobility Hazard',
+        status_pending: 'Pending',
+        status_verified: 'Verified'
     }
 };
 

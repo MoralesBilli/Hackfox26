@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from './LanguageContext';
 
 // --- INTERFACES ENRIQUECIDAS ---
 interface PostData {
@@ -21,14 +22,14 @@ interface PostData {
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 // Mapeos visuales de tipo de reporte
-const formatTipo = (tipo: string) => {
-    if (!tipo) return "Reporte Ciudadano";
+const formatTipo = (tipo: string, t: any) => {
+    if (!tipo) return t('cat_citizen_report');
     switch (tipo) {
-        case "accidente_vial": return "Accidente Vial";
-        case "Problema_peatonal": return "Problema Peatonal";
-        case "infraestructura_dañada": return "Infraestructura Dañada";
-        case "emergencia_riesgo": return "Emergencia / Riesgo";
-        case "peligro_discapacidad": return "Peligro de Discapacidad";
+        case "accidente_vial": return t('cat_traffic_accident');
+        case "Problema_peatonal": return t('cat_pedestrian_problem');
+        case "infraestructura_dañada": return t('cat_damaged_infrastructure');
+        case "emergencia_riesgo": return t('cat_emergency_risk');
+        case "peligro_discapacidad": return t('cat_disability_hazard');
         default: return tipo.replace(/_/g, ' ');
     }
 };
@@ -107,6 +108,7 @@ const formatTimeLocation = (fechaStr: string) => {
 
 // --- SUBCOMPONENTE: Tarjeta del Feed Premium ---
 const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) => {
+    const { language, t } = useLanguage();
     const badge = post.color && colorMap[post.color] ? colorMap[post.color] : colorMap.gris;
 
     return (
@@ -116,7 +118,7 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
                 {/* Lado Izquierdo: Datos del Autor / Reporte */}
                 <div className="min-w-0">
                     <p className="font-title-md text-title-md leading-tight font-bold text-on-surface truncate max-w-[180px] sm:max-w-xs">
-                        {post.author}
+                        {post.author === 'Reporte Ciudadano' ? t('cat_citizen_report') : post.author}
                     </p>
                     <p className="font-label-sm text-label-sm text-on-surface-variant/80 mt-0.5">
                         {post.timeLocation}
@@ -130,18 +132,18 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
                             <span className="material-symbols-outlined text-[13px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
                                 {getTipoIcon(post.tipo)}
                             </span>
-                            {formatTipo(post.tipo)}
+                            {formatTipo(post.tipo, t)}
                         </span>
                     )}
 
                     {post.statusType === 'pending' ? (
                         <div className="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-bold uppercase tracking-wider">
-                            {post.status}
+                            {post.status === 'Pendiente' || post.status === 'Pendiente de verificar' || post.status === 'pendiente' ? t('status_pending') : post.status}
                         </div>
                     ) : (
                         <div className="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
                             <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                            {post.status}
+                            {post.status === 'Verificado' || post.status === 'verificado' ? t('status_verified') : post.status}
                         </div>
                     )}
                 </div>
@@ -162,7 +164,7 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
                         className="flex items-center gap-1.5 text-primary dark:text-primary-fixed-dim hover:underline font-bold transition-all focus:outline-none w-fit"
                     >
                         <span className="material-symbols-outlined text-sm">location_on</span>
-                        <span className="font-label-sm text-xs">Ver en el mapa</span>
+                        <span className="font-label-sm text-xs">{t('feed_show_map')}</span>
                     </button>
                 )}
             </div>
@@ -172,6 +174,7 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
 
 // --- COMPONENTE PRINCIPAL ---
 const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
+    const { language, toggleLanguage, t } = useLanguage();
     const [posts, setPosts] = useState<PostData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -270,16 +273,27 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => onNavigate && onNavigate('home')}
                         >
-                            Tijuana Sin Barreras
+                            {t('app_title')}
                         </h1>
                     </div>
 
-                    <button 
-                        onClick={() => onNavigate && onNavigate('profile')}
-                        className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
-                    >
-                        <span className="material-symbols-outlined">notifications</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                        >
+                            <span className="material-symbols-outlined text-[16px] text-white">language</span>
+                            <span>{language === 'es' ? 'EN' : 'ES'}</span>
+                        </button>
+                        <button 
+                            onClick={() => onNavigate && onNavigate('profile')}
+                            className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
+                            title={t('feed_notifications')}
+                        >
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -290,11 +304,11 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                     <aside className="hidden md:flex flex-col gap-4 w-[260px] shrink-0 sticky top-24 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm transition-all hover:shadow-md duration-300">
                         <div className="flex items-center gap-2 border-b border-outline-variant/10 pb-3">
                             <span className="material-symbols-outlined text-primary text-xl font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>palette</span>
-                            <h2 className="font-bold text-sm tracking-wide text-on-surface uppercase">Simbología</h2>
+                            <h2 className="font-bold text-sm tracking-wide text-on-surface uppercase">{t('symbol_title')}</h2>
                         </div>
 
                         <p className="text-xs text-on-surface-variant/90 leading-relaxed font-medium">
-                            Identifica los reportes comunitarios y barreras de accesibilidad según su color asignado:
+                            {t('symbol_subtitle')}
                         </p>
 
                         <ul className="flex flex-col gap-3.5 mt-2">
@@ -304,9 +318,9 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <div className="flex flex-col">
                                     <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[13px] text-red-500 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>car_crash</span>
-                                        Accidente Vial
+                                        {t('cat_traffic_accident')}
                                     </span>
-                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Choques o bloqueos vehiculares graves en calzada.</span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">{t('symbol_desc_accident')}</span>
                                 </div>
                             </li>
 
@@ -316,9 +330,9 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <div className="flex flex-col">
                                     <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[13px] text-orange-500 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>directions_walk</span>
-                                        Problema Peatonal
+                                        {t('cat_pedestrian_problem')}
                                     </span>
-                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Obstáculos en banquetas, cruces o semáforos peatonales dañados.</span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">{t('symbol_desc_pedestrian')}</span>
                                 </div>
                             </li>
 
@@ -328,9 +342,9 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <div className="flex flex-col">
                                     <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[13px] text-amber-700 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>construction</span>
-                                        Infraestructura
+                                        {t('cat_damaged_infrastructure')}
                                     </span>
-                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Baches, escombros abandonados, grietas y aceras rotas.</span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">{t('symbol_desc_infrastructure')}</span>
                                 </div>
                             </li>
 
@@ -340,9 +354,9 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <div className="flex flex-col">
                                     <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[13px] text-zinc-700 dark:text-zinc-300 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-                                        Emergencia / Riesgo
+                                        {t('cat_emergency_risk')}
                                     </span>
-                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Cables eléctricos expuestos, incendios o hoyos peligrosos profundos.</span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">{t('symbol_desc_emergency')}</span>
                                 </div>
                             </li>
 
@@ -352,9 +366,9 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <div className="flex flex-col">
                                     <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[13px] text-purple-600 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
-                                        Peligro Movilidad
+                                        {t('cat_disability_hazard')}
                                     </span>
-                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Bloqueo de rampas para sillas de ruedas o accesos adaptados.</span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">{t('symbol_desc_mobility')}</span>
                                 </div>
                             </li>
                         </ul>
@@ -373,7 +387,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         <span className="material-symbols-outlined text-3xl">sync</span>
                                     </div>
                                 </div>
-                                <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Actualizar</span>
+                                <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">{t('feed_update_btn')}</span>
                             </button>
 
                             <button
@@ -385,7 +399,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         <span className="material-symbols-outlined text-3xl">map</span>
                                     </div>
                                 </div>
-                                <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Ver Mapa</span>
+                                <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">{t('nav_map')}</span>
                             </button>
                         </section>
 
@@ -394,18 +408,18 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             {loading ? (
                                 <div className="w-full flex flex-col justify-center items-center py-16 gap-3">
                                     <div className="w-10 h-10 border-4 border-surface-variant border-t-primary rounded-full animate-spin"></div>
-                                    <span className="font-label-md text-label-md text-on-surface-variant">Obteniendo reportes comunitarios en tiempo real...</span>
+                                    <span className="font-label-md text-label-md text-on-surface-variant">{t('feed_loading')}</span>
                                 </div>
                             ) : error ? (
                                 <div className="p-4 bg-error-container/30 border border-error-container rounded-2xl text-center space-y-3">
                                     <p className="font-body-md text-on-error-container/90">
-                                        Mostrando reportes sin conexión (backend inactivo).
+                                        {language === 'es' ? 'Mostrando reportes sin conexión (backend inactivo).' : 'Showing offline reports (backend inactive).'}
                                     </p>
                                     <button
                                         onClick={fetchLiveReports}
                                         className="px-4 py-1.5 bg-primary text-on-primary rounded-full text-xs font-bold hover:brightness-110 active:scale-95 transition-all"
                                     >
-                                        Reintentar Conexión
+                                        {language === 'es' ? 'Reintentar Conexión' : 'Retry Connection'}
                                     </button>
                                 </div>
                             ) : null}
@@ -417,12 +431,11 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             {!loading && posts.length === 0 && (
                                 <div className="text-center py-12">
                                     <span className="material-symbols-outlined text-5xl text-on-surface-variant/40">explore_off</span>
-                                    <p className="font-label-lg text-on-surface-variant mt-2">No se encontraron reportes activos.</p>
+                                    <p className="font-label-lg text-on-surface-variant mt-2">{t('feed_no_reports')}</p>
                                 </div>
                             )}
                         </div>
                     </div>
-
                 </div>
             </main>
 

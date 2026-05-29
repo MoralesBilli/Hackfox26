@@ -3,6 +3,7 @@ import React, {
     useMemo,
     useState
 } from 'react';
+import { useLanguage } from './LanguageContext';
 
 import {
     Circle,
@@ -121,6 +122,7 @@ function FlyToPlace({ location }: { location: LatLngTuple | null }) {
 // ======================================================
 
 const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
+    const { language, toggleLanguage, t } = useLanguage();
 
     // ======================================================
     // USER LOCATION
@@ -188,9 +190,9 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 (error) => {
                     console.error(error);
                     if (error.code === error.PERMISSION_DENIED) {
-                        setLocationError('Debes permitir acceso a ubicación');
+                        setLocationError(language === 'es' ? 'Debes permitir acceso a ubicación' : 'You must allow location access');
                     } else {
-                        setLocationError('No se pudo obtener ubicación');
+                        setLocationError(language === 'es' ? 'No se pudo obtener ubicación' : 'Could not obtain location');
                     }
                     setLoadingLocation(false);
                 },
@@ -699,9 +701,9 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 (error) => {
                     console.error(error);
                     if (error.code === error.PERMISSION_DENIED) {
-                        setLocationError('Debes permitir acceso a ubicación');
+                        setLocationError(language === 'es' ? 'Debes permitir acceso a ubicación' : 'You must allow location access');
                     } else {
-                        setLocationError('No se pudo obtener ubicación');
+                        setLocationError(language === 'es' ? 'No se pudo obtener ubicación' : 'Could not obtain location');
                     }
                     setLoadingLocation(false);
                 },
@@ -712,7 +714,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 }
             );
         } else {
-            setLocationError('Geolocalización no soportada');
+            setLocationError(language === 'es' ? 'Geolocalización no soportada' : 'Geolocation not supported');
             setLoadingLocation(false);
         }
 
@@ -759,19 +761,29 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                         </button>
                         <div>
                             <h1 className="text-lg font-bold leading-none">
-                                Tijuana Sin Barreras
+                                {t('app_title')}
                             </h1>
                             <p className="text-xs text-white/80">
-                                Mapa de accesibilidad urbana
+                                {t('app_subtitle')}
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={getCurrentLocation}
-                        className="h-10 px-4 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-gray-100 transition-colors"
-                    >
-                        Mi ubicación
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                        >
+                            <span className="material-symbols-outlined text-[16px] text-white">language</span>
+                            <span>{language === 'es' ? 'EN' : 'ES'}</span>
+                        </button>
+                        <button
+                            onClick={getCurrentLocation}
+                            className="h-10 px-4 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-gray-100 transition-colors"
+                        >
+                            {t('my_location')}
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -790,10 +802,10 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             {/* HEADER */}
                             <div className="p-5 border-b">
                                 <h2 className="text-xl font-bold text-gray-800">
-                                    Buscar ubicación
+                                    {t('search_title')}
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">
-                                    Encuentra lugares y calcula rutas
+                                    {t('search_subtitle')}
                                 </p>
                             </div>
 
@@ -805,7 +817,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     </span>
                                     <input
                                         type="text"
-                                        placeholder="Buscar calle, colonia o lugar..."
+                                        placeholder={t('search_placeholder')}
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={(e) => {
@@ -849,13 +861,13 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             {/* INCIDENT CONTROLS */}
                             <div className="p-5 border-b">
                                 <h3 className="font-semibold text-gray-800 mb-3">
-                                    Control de incidentes
+                                    {t('incident_controls')}
                                 </h3>
                                 
                                 <div className="space-y-3">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <span className="text-sm text-gray-600">
-                                            Mostrar incidentes
+                                            {t('show_incidents')}
                                         </span>
                                         <input
                                             type="checkbox"
@@ -867,7 +879,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <span className="text-sm text-gray-600">
-                                            Evitar zonas con incidentes
+                                            {t('avoid_incidents')}
                                         </span>
                                         <input
                                             type="checkbox"
@@ -882,7 +894,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         className="w-full h-10 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
                                         disabled={loadingIncidents}
                                     >
-                                        {loadingIncidents ? 'Cargando...' : 'Actualizar incidentes'}
+                                        {loadingIncidents ? (language === 'es' ? 'Cargando...' : 'Loading...') : t('update_incidents_btn')}
                                     </button>
                                 </div>
                             </div>
@@ -890,7 +902,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             {/* INCIDENT FILTERS */}
                             <div className="p-5 border-b">
                                 <h3 className="font-semibold text-gray-800 mb-3">
-                                    Filtrar incidentes
+                                    {t('filter_incidents_title')}
                                 </h3>
                                 
                                 <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1">
@@ -902,7 +914,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
-                                        Todos ({incidentStats.total})
+                                        {t('filter_all')} ({incidentStats.total})
                                     </button>
                                     <button
                                         onClick={() => setFilterType('accidente_vial')}
@@ -912,7 +924,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 : 'bg-red-50 text-red-600 hover:bg-red-100'
                                         }`}
                                     >
-                                        🚗 Accidentes ({incidentStats.accidentes})
+                                        🚗 {t('filter_accidents')} ({incidentStats.accidentes})
                                     </button>
                                     <button
                                         onClick={() => setFilterType('Problema_peatonal')}
@@ -922,7 +934,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
                                         }`}
                                     >
-                                        🚶 Peatonal ({incidentStats.peatonal})
+                                        🚶 {t('filter_pedestrian')} ({incidentStats.peatonal})
                                     </button>
                                     <button
                                         onClick={() => setFilterType('infraestructura_dañada')}
@@ -932,7 +944,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
                                         }`}
                                     >
-                                        🚧 Infraestructura ({incidentStats.infraestructura})
+                                        🚧 {t('filter_infrastructure')} ({incidentStats.infraestructura})
                                     </button>
                                     <button
                                         onClick={() => setFilterType('emergencia_riesgo')}
@@ -942,7 +954,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 : 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200'
                                         }`}
                                     >
-                                        ⚠️ Emergencias ({incidentStats.emergencia})
+                                        ⚠️ {t('filter_emergencies')} ({incidentStats.emergencia})
                                     </button>
                                     <button
                                         onClick={() => setFilterType('peligro_discapacidad')}
@@ -952,14 +964,14 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
                                         }`}
                                     >
-                                        ♿ Accesibilidad ({incidentStats.discapacidad})
+                                        ♿ {t('filter_accessibility')} ({incidentStats.discapacidad})
                                     </button>
                                 </div>
                                 
                                 {incidents.length > 0 && (
                                     <div className="mt-3 p-2 bg-blue-50 rounded-xl">
                                         <div className="text-xs text-gray-600">
-                                            📊 {incidentStats.total} incidentes activos
+                                            📊 {incidentStats.total} {language === 'es' ? 'incidentes activos' : 'active incidents'}
                                         </div>
                                     </div>
                                 )}
@@ -968,13 +980,13 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             {/* DISTANCE RANGE FILTER */}
                             <div className="p-5 border-b">
                                 <h3 className="font-semibold text-gray-800 mb-3">
-                                    Filtro por distancia
+                                    {t('distance_filter_title')}
                                 </h3>
                                 
                                 <div className="space-y-3">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <span className="text-sm text-gray-600 font-medium">
-                                            Limitar por distancia (1-5 km)
+                                            {t('distance_filter_limit')}
                                         </span>
                                         <input
                                             type="checkbox"
@@ -987,7 +999,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     {showRadiusFilter && (
                                         <div className="space-y-2 pt-1">
                                             <div className="flex justify-between text-xs font-semibold">
-                                                <span className="text-gray-500">Radio de búsqueda:</span>
+                                                <span className="text-gray-500">{t('search_radius_label')}:</span>
                                                 <span className="text-primary">{radiusFilter} km</span>
                                             </div>
                                             <input
@@ -1009,7 +1021,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                             
                                             {userLocation && (
                                                 <div className="mt-2.5 p-2 bg-gray-50 rounded-xl text-[11px] text-gray-600 leading-normal border border-gray-100">
-                                                    📍 Filtrando incidentes a menos de <span className="font-bold text-gray-800">{radiusFilter} km</span> de tu ubicación.
+                                                    📍 {t('distance_filtering_msg').replace('{radius}', String(radiusFilter))}
                                                 </div>
                                             )}
                                         </div>
@@ -1024,7 +1036,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         <span className="material-symbols-outlined animate-spin text-[18px]">
                                             progress_activity
                                         </span>
-                                        Obteniendo ubicación...
+                                        {t('loading_location')}
                                     </div>
                                 )}
 
@@ -1039,7 +1051,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-xs text-gray-500">
-                                                    Precisión GPS
+                                                    {t('gps_accuracy')}
                                                 </p>
                                                 <p className="font-bold text-primary">
                                                     {Math.round(accuracy ?? 0)}m
@@ -1055,7 +1067,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                             onClick={getCurrentLocation}
                                             className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity"
                                         >
-                                            Actualizar ubicación
+                                            {t('update_location_btn')}
                                         </button>
                                     </div>
                                 )}
@@ -1069,10 +1081,10 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <div className="h-16 border-b px-5 flex items-center justify-between shrink-0">
                                     <div>
                                         <h2 className="font-bold text-gray-800">
-                                            Mapa interactivo
+                                            {t('interactive_map_title')}
                                         </h2>
                                         <p className="text-sm text-gray-500">
-                                            Ubicación en tiempo real
+                                            {t('real_time_loc_subtitle')}
                                         </p>
                                     </div>
                                 </div>
@@ -1083,7 +1095,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     <button
                                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                                         className="absolute top-4 left-4 z-[1000] w-10 h-10 bg-white hover:bg-gray-100 text-gray-700 rounded-xl shadow-md border border-gray-250 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                                        title={isSidebarCollapsed ? "Mostrar buscador y filtros" : "Ocultar panel de búsqueda"}
+                                        title={isSidebarCollapsed ? t('sidebar_show_tooltip') : t('sidebar_hide_tooltip')}
                                     >
                                         <span className="material-symbols-outlined text-lg">
                                             {isSidebarCollapsed ? 'search' : 'arrow_back'}
@@ -1129,7 +1141,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                         }
                                                     }}
                                                 >
-                                                    <Popup>Tu ubicación actual</Popup>
+                                                    <Popup>{t('user_current_loc_popup')}</Popup>
                                                 </Marker>
                                             </>
                                         )}
@@ -1137,7 +1149,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         {/* SEARCHED PLACE */}
                                         {selectedPlace && (
                                             <Marker position={selectedPlace}>
-                                                <Popup>Lugar encontrado</Popup>
+                                                <Popup>{t('searched_place_popup')}</Popup>
                                             </Marker>
                                         )}
 
@@ -1167,7 +1179,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                     <div className="p-3 min-w-[280px] max-w-[320px]">
                                                         <div className="flex items-center mb-3">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-red-500">
+                                                                 <span className="material-symbols-outlined text-red-500">
                                                                     warning
                                                                 </span>
                                                                 <h3 className="font-bold text-gray-800">
@@ -1248,7 +1260,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 {route && (
                                     <div className="border-t px-5 py-4 bg-gray-50 shrink-0 flex flex-col gap-3">
                                         <h4 className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">
-                                            Rutas sugeridas (toca para cambiar)
+                                            {t('suggested_routes_title')}
                                         </h4>
                                         <div className="flex flex-col sm:flex-row gap-3">
                                             {/* Ruta Activa */}
@@ -1257,7 +1269,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                 onClick={() => {}}
                                             >
                                                 <div className="min-w-0">
-                                                    <p className="text-[10px] font-extrabold text-primary uppercase">Ruta Activa</p>
+                                                    <p className="text-[10px] font-extrabold text-primary uppercase">{t('active_route_label')}</p>
                                                     <p className="text-sm font-black text-gray-800 truncate">
                                                         {route.distanceKm.toFixed(2)} km • {route.durationMin.toFixed(0)} min
                                                     </p>
@@ -1275,7 +1287,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                                     className="flex-1 p-3 rounded-xl bg-white border border-gray-250 hover:border-gray-400 hover:shadow-sm active:scale-[0.99] text-left transition-all flex items-center justify-between cursor-pointer"
                                                 >
                                                     <div className="min-w-0">
-                                                        <p className="text-[10px] font-bold text-gray-500 uppercase font-bold">Alternativa {idx + 1}</p>
+                                                        <p className="text-[10px] font-bold text-gray-500 uppercase font-bold">{t('alternative_route_label')} {idx + 1}</p>
                                                         <p className="text-sm font-semibold text-gray-700 truncate">
                                                             {altRoute.distanceKm.toFixed(2)} km • {altRoute.durationMin.toFixed(0)} min
                                                         </p>
@@ -1289,7 +1301,7 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                         {avoidIncidents && incidents.length > 0 && (
                                             <div className="text-[11px] text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100 flex items-center gap-1.5 w-fit font-medium">
                                                 <span>🛡️</span>
-                                                <span>Ruta optimizada para evitar barreras urbanas reportadas.</span>
+                                                <span>{t('optimized_route_msg')}</span>
                                             </div>
                                         )}
                                     </div>

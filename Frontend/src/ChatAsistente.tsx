@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from './LanguageContext';
 
 type Message = {
     role: 'user' | 'model';
     content: string;
+    contentKey?: string;
 };
 
 type ChatAsistenteProps = {
@@ -12,13 +14,15 @@ type ChatAsistenteProps = {
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
+    const { language, t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [mensaje, setMensaje] = useState('');
     const [loading, setLoading] = useState(false);
     const [historial, setHistorial] = useState<Message[]>([
         {
             role: 'model',
-            content: 'Hola, soy tu asistente ligero de la app. Puedo ayudarte con mapa, rutas, reportes, 911 y accesibilidad.'
+            content: 'Hola, soy tu asistente ligero de la app. Puedo ayudarte con mapa, rutas, reportes, 911 y accesibilidad.',
+            contentKey: 'assistant_welcome'
         }
     ]);
 
@@ -31,10 +35,10 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
         }
     }, [historial, loading, isOpen]);
 
-    const enviarMensaje = async (texto: string) => {
+    const enviarMensaje = async (texto: string, contentKey?: string) => {
         if (!texto.trim()) return;
 
-        const nuevoMensaje: Message = { role: 'user', content: texto };
+        const nuevoMensaje: Message = { role: 'user', content: texto, contentKey };
         const historialPrevio = [...historial];
         
         setHistorial(prev => [...prev, nuevoMensaje]);
@@ -45,7 +49,7 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
             // Mapear historial al formato esperado por el backend (role: user/model)
             const historialAPI = historialPrevio.map(msg => ({
                 role: msg.role,
-                content: msg.content
+                content: msg.contentKey ? t(msg.contentKey) : msg.content
             }));
 
             const response = await fetch(`${apiUrl}/asistente_chat`, {
@@ -54,7 +58,7 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    mensaje: texto,
+                    mensaje: contentKey ? t(contentKey) : texto,
                     historial: historialAPI
                 })
             });
@@ -68,13 +72,17 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
             if (data.respuesta) {
                 setHistorial(prev => [...prev, { role: 'model', content: data.respuesta }]);
             } else {
-                setHistorial(prev => [...prev, { role: 'model', content: 'Lo siento, no pude procesar tu solicitud.' }]);
+                setHistorial(prev => [...prev, { 
+                    role: 'model', 
+                    content: language === 'es' ? 'Lo siento, no pude procesar tu solicitud.' : 'Sorry, I could not process your request.' 
+                }]);
             }
         } catch (error) {
             console.error('Error en chat asistente:', error);
             setHistorial(prev => [...prev, { 
                 role: 'model', 
-                content: 'Error de conexión. Asegúrate de que el servidor esté activo y vuelve a intentarlo.' 
+                content: 'Error de conexión. Asegúrate de que el servidor esté activo y vuelve a intentarlo.',
+                contentKey: 'chat_conn_error'
             }]);
         } finally {
             setLoading(false);
@@ -87,20 +95,24 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                 onNavigate('map');
                 setHistorial(prev => [
                     ...prev, 
-                    { role: 'user', content: 'Abrir mapa' },
-                    { role: 'model', content: 'Te he llevado al mapa interactivo. Aquí puedes visualizar incidentes en tiempo real, filtrar reportes por radio y buscar direcciones.' }
+                    { role: 'user', content: 'Abrir mapa', contentKey: 'chip_open_map' },
+                    { role: 'model', content: 'Te he llevado al mapa interactivo. Aquí puedes visualizar incidentes en tiempo real, filtrar reportes por radio y buscar direcciones.', contentKey: 'chat_model_opened_map' }
                 ]);
             }
         } else if (action === 'reporte') {
-            enviarMensaje('¿Cómo reporto un obstáculo o problema de accesibilidad?');
+            const promptEs = '¿Cómo reporto un obstáculo o problema de accesibilidad?';
+            const promptEn = 'How do I report an obstacle or accessibility issue?';
+            enviarMensaje(language === 'es' ? promptEs : promptEn);
         } else if (action === 'ruta') {
-            enviarMensaje('¿Cómo calculo una ruta accesible evitando incidentes?');
+            const promptEs = '¿Cómo calculo una ruta accesible evitando incidentes?';
+            const promptEn = 'How do I calculate an accessible route avoiding incidents?';
+            enviarMensaje(language === 'es' ? promptEs : promptEn);
         } else if (action === '911') {
             window.location.href = 'tel:911';
             setHistorial(prev => [
                 ...prev,
-                { role: 'user', content: 'Llamar al 911' },
-                { role: 'model', content: 'He iniciado la llamada al número de emergencias 911. Por favor mantén la calma y describe tu situación.' }
+                { role: 'user', content: 'Llamar al 911', contentKey: 'chip_call_911' },
+                { role: 'model', content: 'He iniciado la llamada al número de emergencias 911. Por favor mantén la calma y describe tu situación.', contentKey: 'chat_model_called_911' }
             ]);
         }
     };
@@ -120,7 +132,7 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                     style={{
                         boxShadow: '0 8px 30px rgba(102, 0, 0, 0.3)',
                     }}
-                    title="Asistente de accesibilidad"
+                    title={language === 'es' ? 'Asistente de accesibilidad' : 'Accessibility assistant'}
                 >
                     <span className="material-symbols-outlined text-2xl font-bold">
                         smart_toy
@@ -145,21 +157,21 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                         <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-lg">smart_toy</span>
                             <span className="text-sm font-bold tracking-wide">
-                                Asistente IA ligero · Inicio
+                                {t('assistant_title')}
                             </span>
                         </div>
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => handleQuickAction('911')}
                                 className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
-                                title="Llamar al 911"
+                                title={t('chip_call_911')}
                             >
                                 <span className="material-symbols-outlined text-lg">call</span>
                             </button>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
-                                title="Cerrar"
+                                title={language === 'es' ? 'Cerrar' : 'Close'}
                             >
                                 <span className="material-symbols-outlined text-lg">close</span>
                             </button>
@@ -172,25 +184,25 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                             onClick={() => handleQuickAction('mapa')}
                             className="shrink-0 h-7 px-3.5 rounded-full border border-gray-250 bg-white text-[11px] font-semibold text-gray-700 hover:bg-primary/5 active:scale-95 transition-all cursor-pointer"
                         >
-                            Abrir mapa
+                            {t('chip_open_map')}
                         </button>
                         <button
                             onClick={() => handleQuickAction('reporte')}
                             className="shrink-0 h-7 px-3.5 rounded-full border border-gray-250 bg-white text-[11px] font-semibold text-gray-700 hover:bg-primary/5 active:scale-95 transition-all cursor-pointer"
                         >
-                            ¿Cómo reporto?
+                            {t('chip_how_report')}
                         </button>
                         <button
                             onClick={() => handleQuickAction('ruta')}
                             className="shrink-0 h-7 px-3.5 rounded-full border border-gray-250 bg-white text-[11px] font-semibold text-gray-700 hover:bg-primary/5 active:scale-95 transition-all cursor-pointer"
                         >
-                            Necesito ruta rápida
+                            {t('chip_need_route')}
                         </button>
                         <button
                             onClick={() => handleQuickAction('911')}
                             className="shrink-0 h-7 px-3.5 rounded-full border border-red-200 bg-red-50 text-[11px] font-semibold text-red-700 hover:bg-red-100 active:scale-95 transition-all cursor-pointer"
                         >
-                            Llamar 911
+                            {t('chip_call_911')}
                         </button>
                     </div>
 
@@ -205,7 +217,7 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                                         : 'bg-[#FFF8F6] border border-[#F5DED9] text-gray-800 self-start rounded-tl-none'
                                 }`}
                             >
-                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                                <p className="whitespace-pre-wrap">{msg.contentKey ? t(msg.contentKey) : msg.content}</p>
                             </div>
                         ))}
 
@@ -230,7 +242,7 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                     >
                         <input
                             type="text"
-                            placeholder="Escribe tu pregunta..."
+                            placeholder={t('assistant_input_placeholder')}
                             value={mensaje}
                             onChange={(e) => setMensaje(e.target.value)}
                             disabled={loading}
@@ -250,7 +262,7 @@ const ChatAsistente: React.FC<ChatAsistenteProps> = ({ onNavigate }) => {
                                 disabled:opacity-50 disabled:pointer-events-none cursor-pointer
                             "
                         >
-                            Enviar
+                            {t('assistant_send_btn')}
                         </button>
                     </form>
                 </div>
