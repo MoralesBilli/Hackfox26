@@ -10,6 +10,7 @@ export interface AccessibilitySettings {
     voiceSpeed: number;
     dyslexiaFont: boolean;
     colorBlindMode: ColorBlindMode;
+    voiceNavigation: boolean;
 }
 
 interface AccessibilityContextType {
@@ -25,6 +26,7 @@ const defaultSettings: AccessibilitySettings = {
     voiceSpeed: 1.0,
     dyslexiaFont: false,
     colorBlindMode: 'none',
+    voiceNavigation: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);

@@ -3,34 +3,20 @@ import { useAccessibility } from './AccesibilidadContext';
 import { useLanguage } from './LanguageContext';
 import type { ColorBlindMode } from './AccesibilidadContext';
 
-// ─── Voice command map ───────────────────────────────────────────────────────
-const VOICE_COMMANDS: Record<string, string> = {
-    // Español
-    'inicio': 'feed',
-    'ir a inicio': 'feed',
-    'ir al inicio': 'feed',
-    'home': 'feed',
-    'mapa': 'map',
-    'ir a mapa': 'map',
-    'ir al mapa': 'map',
-    'map': 'map',
-    'reportar': 'report',
-    'reporte': 'report',
-    'nuevo reporte': 'report',
-    'report': 'report',
-    'perfil': 'profile',
-    'mi perfil': 'profile',
-    'profile': 'profile',
-    'emergencia': '__911__',
-    '911': '__911__',
-    'emergency': '__911__',
-};
-
+// ─── Friendly names for screen reader feedback ──────────────────────────────
 const FRIENDLY_NAMES_ES: Record<string, string> = {
-    feed: 'Inicio', map: 'Mapa', report: 'Reportar', profile: 'Perfil', '__911__': '911',
+    feed: 'Inicio',
+    map: 'Mapa',
+    report: 'Reportar',
+    profile: 'Perfil',
+    '__911__': '911',
 };
 const FRIENDLY_NAMES_EN: Record<string, string> = {
-    feed: 'Home', map: 'Map', report: 'Report', profile: 'Profile', '__911__': '911',
+    feed: 'Home',
+    map: 'Map',
+    report: 'Report',
+    profile: 'Profile',
+    '__911__': '911',
 };
 
 // ─── SpeechRecognition type shim ─────────────────────────────────────────────
@@ -52,27 +38,230 @@ function getSpeechRecognition(): ISpeechRecognition | null {
     return new SR() as ISpeechRecognition;
 }
 
+// ─── Robust voice command matcher ───────────────────────────────────────────
+const matchVoiceCommand = (text: string): string | null => {
+    const cleanText = text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // remove accents
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "") // remove punctuation
+        .trim();
+
+    console.log("[Voice Control] Cleaned speech input:", cleanText);
+
+    // Emergencia / 911
+    if (
+        cleanText.includes("911") || 
+        cleanText.includes("emergencia") || 
+        cleanText.includes("emergency") ||
+        cleanText.includes("urgencia")
+    ) {
+        return "__911__";
+    }
+
+    // Mapa
+    if (
+        cleanText.includes("mapa") || 
+        cleanText.includes("map") || 
+        cleanText.includes("ubicar") || 
+        cleanText.includes("ubicacion")
+    ) {
+        return "map";
+    }
+
+    // Reportar
+    if (
+        cleanText.includes("reportar") || 
+        cleanText.includes("reporte") || 
+        cleanText.includes("report") || 
+        cleanText.includes("obstaculo") ||
+        cleanText.includes("incidencia")
+    ) {
+        return "report";
+    }
+
+    // Perfil
+    if (
+        cleanText.includes("perfil") || 
+        cleanText.includes("profile") || 
+        cleanText.includes("usuario") || 
+        cleanText.includes("cuenta") ||
+        cleanText.includes("registro") ||
+        cleanText.includes("login")
+    ) {
+        return "profile";
+    }
+
+    // Inicio / Feed / Home
+    if (
+        cleanText.includes("inicio") || 
+        cleanText.includes("feed") || 
+        cleanText.includes("home") || 
+        cleanText.includes("principal") ||
+        cleanText.includes("noticias")
+    ) {
+        return "feed";
+    }
+
+    return null;
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { settings, updateSetting } = useAccessibility();
     const { t, language } = useLanguage();
 
-    // Voice state
+    // Voice states
     const [isListening, setIsListening] = useState(false);
     const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
-    const recognitionRef = useRef<ISpeechRecognition | null>(null);
+    const [currentSpeechText, setCurrentSpeechText] = useState<string>('');
     const voiceMsgTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Cleanup recognition on unmount
-    useEffect(() => {
-        return () => {
-            recognitionRef.current?.abort();
-            if (voiceMsgTimeout.current) clearTimeout(voiceMsgTimeout.current);
-        };
-    }, []);
+    // Speak voice confirmation
+    const speakFeedback = (text: string) => {
+        const synth = window.speechSynthesis;
+        if (synth) {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = language === 'es' ? 'es-MX' : 'en-US';
+            synth.speak(utterance);
+        }
+    };
 
-    // Close on Escape
+    const showVoiceMsg = (msg: string) => {
+        setVoiceMessage(msg);
+        if (voiceMsgTimeout.current) clearTimeout(voiceMsgTimeout.current);
+        voiceMsgTimeout.current = setTimeout(() => setVoiceMessage(null), 3500);
+    };
+
+    // Continuous voice listener effect
+    useEffect(() => {
+        let recognition: any = null;
+        let shouldRestart = settings.voiceNavigation;
+
+        const startSR = () => {
+            if (!shouldRestart) return;
+
+            // Clean up previous instance just in case
+            if (recognition) {
+                try { recognition.abort(); } catch (e) {}
+            }
+
+            const newRec = getSpeechRecognition();
+            if (!newRec) {
+                showVoiceMsg(t('a11y_voice_not_supported'));
+                return;
+            }
+
+            const recognitionLang = language === 'es' ? 'es-ES' : 'en-US';
+            console.log("[Voice Control] Initializing SpeechRecognition. App Language:", language, "-> Speech lang:", recognitionLang);
+            newRec.lang = recognitionLang;
+            newRec.interimResults = true; // Habilitado para mostrar transcripción en tiempo real
+            newRec.continuous = false; // continuous=false is much more reliable across browsers when combined with auto-restart
+
+            newRec.onresult = (event: any) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    const text = result[0].transcript;
+                    if (result.isFinal) {
+                        finalTranscript += text;
+                    } else {
+                        interimTranscript += text;
+                    }
+                }
+
+                // Actualizar lo que se escucha en tiempo real
+                const displayTranscript = finalTranscript || interimTranscript;
+                setCurrentSpeechText(displayTranscript);
+
+                if (finalTranscript) {
+                    console.log("[Voice Control] Heard final:", finalTranscript);
+                    const target = matchVoiceCommand(finalTranscript);
+                    const names = language === 'es' ? FRIENDLY_NAMES_ES : FRIENDLY_NAMES_EN;
+
+                    if (target) {
+                        if (target === '__911__') {
+                            const msg = (t('a11y_voice_nav_to') || 'Navegando a') + ' 911';
+                            showVoiceMsg(msg);
+                            speakFeedback(msg);
+                            setTimeout(() => {
+                                window.location.href = 'tel:911';
+                            }, 800);
+                        } else {
+                            const msg = (t('a11y_voice_nav_to') || 'Navegando a') + ' ' + names[target];
+                            showVoiceMsg(msg);
+                            speakFeedback(msg);
+                            setTimeout(() => {
+                                setIsOpen(false);
+                                onNavigate(target);
+                            }, 800);
+                        }
+                    } else {
+                        const msg = t('a11y_voice_not_understood') || 'Comando no reconocido. Intenta de nuevo.';
+                        showVoiceMsg(msg);
+                        speakFeedback(msg);
+                    }
+
+                    // Limpiar el texto de debug tras un corto delay
+                    setTimeout(() => {
+                        setCurrentSpeechText('');
+                    }, 2000);
+                }
+            };
+
+            newRec.onerror = (e: any) => {
+                console.log("[Voice Control] Speech recognition error:", e.error);
+                // Si hay error, limpiamos el texto
+                if (e.error === 'no-speech') {
+                    setCurrentSpeechText('');
+                }
+            };
+
+            newRec.onend = () => {
+                setIsListening(false);
+                if (shouldRestart) {
+                    setTimeout(() => {
+                        if (shouldRestart) startSR();
+                    }, 400);
+                }
+            };
+
+            recognition = newRec;
+            try {
+                newRec.start();
+                setIsListening(true);
+            } catch (err) {
+                console.error("[Voice Control] Start error:", err);
+            }
+        };
+
+        if (settings.voiceNavigation) {
+            shouldRestart = true;
+            startSR();
+        } else {
+            shouldRestart = false;
+            setIsListening(false);
+            setCurrentSpeechText('');
+            if (recognition) {
+                try { recognition.abort(); } catch (e) {}
+            }
+        }
+
+        return () => {
+            shouldRestart = false;
+            setIsListening(false);
+            setCurrentSpeechText('');
+            if (recognition) {
+                try { recognition.abort(); } catch (e) {}
+            }
+        };
+    }, [settings.voiceNavigation, language]);
+
+    // Close on Escape key
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) setIsOpen(false);
@@ -88,69 +277,6 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
             window.removeEventListener('keydown', handleKey);
         };
     }, [isOpen]);
-
-    // ── Voice navigation ─────────────────────────────────────────────────────
-    const startListening = () => {
-        const recognition = getSpeechRecognition();
-        if (!recognition) {
-            showVoiceMsg(t('a11y_voice_not_supported'));
-            return;
-        }
-
-        recognition.lang = language === 'es' ? 'es-MX' : 'en-US';
-        recognition.interimResults = false;
-        recognition.continuous = false;
-
-        recognition.onresult = (event: any) => {
-            const transcript = (event.results[0][0].transcript as string).toLowerCase().trim();
-            handleVoiceCommand(transcript);
-        };
-
-        recognition.onerror = () => {
-            setIsListening(false);
-            showVoiceMsg(t('a11y_voice_not_understood'));
-        };
-
-        recognition.onend = () => {
-            setIsListening(false);
-        };
-
-        recognitionRef.current = recognition;
-        setIsListening(true);
-        setVoiceMessage(null);
-        recognition.start();
-    };
-
-    const stopListening = () => {
-        recognitionRef.current?.stop();
-        setIsListening(false);
-    };
-
-    const handleVoiceCommand = (transcript: string) => {
-        const target = VOICE_COMMANDS[transcript];
-        const names = language === 'es' ? FRIENDLY_NAMES_ES : FRIENDLY_NAMES_EN;
-
-        if (target) {
-            if (target === '__911__') {
-                window.location.href = 'tel:911';
-                showVoiceMsg(t('a11y_voice_nav_to') + '911');
-            } else {
-                showVoiceMsg(t('a11y_voice_nav_to') + names[target]);
-                setTimeout(() => {
-                    setIsOpen(false);
-                    onNavigate(target);
-                }, 600);
-            }
-        } else {
-            showVoiceMsg(t('a11y_voice_not_understood'));
-        }
-    };
-
-    const showVoiceMsg = (msg: string) => {
-        setVoiceMessage(msg);
-        if (voiceMsgTimeout.current) clearTimeout(voiceMsgTimeout.current);
-        voiceMsgTimeout.current = setTimeout(() => setVoiceMessage(null), 3500);
-    };
 
     // ── Toggle helper for switches ───────────────────────────────────────────
     const Switch = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
@@ -172,14 +298,48 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                     aria-label={t('a11y_open_panel')}
                     className="fixed bottom-24 left-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-40 transition-transform active:scale-90 hover:scale-105"
                     style={{
-                        background: 'linear-gradient(135deg, #6C63FF 0%, #3F3D9E 100%)',
+                        background: settings.voiceNavigation
+                            ? 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)'
+                            : 'linear-gradient(135deg, #6C63FF 0%, #3F3D9E 100%)',
                         color: '#fff',
-                        boxShadow: '0 4px 20px rgba(108,99,255,0.4)',
+                        boxShadow: settings.voiceNavigation
+                            ? '0 4px 20px rgba(239,68,68,0.4)'
+                            : '0 4px 20px rgba(108,99,255,0.4)',
                     }}
                     onClick={() => setIsOpen(true)}
                 >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
+                    <span aria-hidden="true" className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        {settings.voiceNavigation ? 'mic' : 'accessible'}
+                    </span>
+                    {settings.voiceNavigation && (
+                        <span className="voice-indicator-ping"></span>
+                    )}
                 </button>
+            )}
+
+            {/* Real-time speech transcription debug text (visible outside the modal, directly under the microphone button) */}
+            {!isOpen && settings.voiceNavigation && currentSpeechText && (
+                <div 
+                    className="fixed left-4 max-w-[200px] p-2 rounded-xl text-center border shadow-lg z-40 text-xs font-medium"
+                    style={{
+                        bottom: '16px', // Just below the button which is at bottom-24
+                        background: 'rgba(0, 0, 0, 0.75)',
+                        color: '#fff',
+                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(4px)',
+                        animation: 'a11yFadeIn 0.2s ease-out'
+                    }}
+                >
+                    <div className="text-[9px] uppercase tracking-wider text-white/50 mb-0.5">Escuchando:</div>
+                    <div className="italic">"{currentSpeechText}"</div>
+                </div>
+            )}
+
+            {/* Voice feedback message (always visible when active) */}
+            {voiceMessage && (
+                <div className="fixed bottom-40 left-4 max-w-[220px] p-3 rounded-lg bg-surface-container text-xs text-on-surface text-center shadow-md border border-outline-variant/30 z-40" style={{ animation: 'a11yFadeIn 0.3s ease-out' }}>
+                    {voiceMessage}
+                </div>
             )}
 
             {/* ── Modal overlay ────────────────────────────────────────────── */}
@@ -314,32 +474,25 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
 
                             <hr className="border-outline-variant/20" />
 
-                            {/* ── Voice Navigation ─────────────────────────── */}
-                            <section className="rounded-xl p-4" style={{ background: 'linear-gradient(135deg, rgba(108,99,255,0.08), rgba(63,61,158,0.06))' }}>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span aria-hidden="true" className="material-symbols-outlined text-primary">mic</span>
-                                    <h3 className="text-sm font-semibold text-on-surface">{t('a11y_voice_nav')}</h3>
-                                </div>
-
-                                <p className="text-[11px] text-on-surface-variant mb-3 leading-relaxed">{t('a11y_voice_hint')}</p>
-
-                                <button
-                                    className={`w-full h-12 rounded-xl flex items-center justify-center gap-2 font-medium text-sm transition-all ${isListening
-                                            ? 'bg-red-500 text-white animate-pulse'
-                                            : 'bg-primary/10 text-primary hover:bg-primary/20'
-                                        }`}
-                                    onClick={isListening ? stopListening : startListening}
-                                >
-                                    <span className="material-symbols-outlined text-[20px]">
-                                        {isListening ? 'hearing' : 'mic'}
-                                    </span>
-                                    {isListening ? t('a11y_voice_listening') : t('a11y_voice_nav')}
-                                </button>
-
-                                {/* Voice feedback */}
-                                {voiceMessage && (
-                                    <div className="mt-2 p-2 rounded-lg bg-surface-container text-xs text-on-surface text-center" style={{ animation: 'a11yFadeIn 0.2s ease-out' }}>
-                                        {voiceMessage}
+                            {/* ── Voice Navigation (Persistent Switch) ──────── */}
+                            <section>
+                                <label className="flex items-center justify-between cursor-pointer min-h-[44px]">
+                                    <div className="flex items-center gap-3">
+                                        <span aria-hidden="true" className="material-symbols-outlined text-on-surface-variant">mic</span>
+                                        <div>
+                                            <span className="text-sm text-on-surface">{t('a11y_voice_nav')}</span>
+                                            <span className="block text-[10px] text-on-surface-variant">{t('a11y_voice_nav_desc')}</span>
+                                        </div>
+                                    </div>
+                                    <Switch checked={settings.voiceNavigation} onChange={(v) => updateSetting('voiceNavigation', v)} label={t('a11y_voice_nav')} />
+                                </label>
+                                {settings.voiceNavigation && (
+                                    <div className="mt-3 p-3 rounded-xl text-xs bg-primary/5 text-primary border border-primary/10 leading-relaxed animate-pulse">
+                                        <div className="flex items-center gap-1.5 font-semibold mb-1">
+                                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                            {t('a11y_voice_listening')}
+                                        </div>
+                                        {t('a11y_voice_hint')}
                                     </div>
                                 )}
                             </section>
@@ -360,7 +513,7 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                 </div>
             )}
 
-            {/* ── Animations ──────────────────────────────────────────────── */}
+            {/* ── Animations and Custom styles ────────────────────────────────── */}
             <style>{`
                 @keyframes a11ySlideUp {
                     from { opacity: 0; transform: translateY(40px) scale(0.95); }
@@ -369,6 +522,22 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                 @keyframes a11yFadeIn {
                     from { opacity: 0; }
                     to   { opacity: 1; }
+                }
+                .voice-indicator-ping {
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    width: 12px;
+                    height: 12px;
+                    background-color: #10B981;
+                    border: 2px solid white;
+                    border-radius: 50%;
+                    animation: voicePing 1.5s infinite ease-in-out;
+                }
+                @keyframes voicePing {
+                    0% { transform: scale(0.8); opacity: 1; }
+                    50% { transform: scale(1.3); opacity: 0.6; }
+                    100% { transform: scale(0.8); opacity: 1; }
                 }
                 input[type=range]::-webkit-slider-thumb {
                     appearance: none; width: 22px; height: 22px;
