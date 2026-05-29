@@ -753,21 +753,20 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
     return (
         <div className="w-full h-screen bg-[#f5f7fb] flex flex-col overflow-hidden">
             {/* HEADER */}
-            <header className="h-16 shrink-0 bg-primary text-white border-b border-white/10 shadow-md z-30">
-                <div className="w-full h-full max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
-                        <button className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
-                            <span className="material-symbols-outlined">menu</span>
-                        </button>
-                        <div>
-                            <h1 className="text-lg font-bold leading-none">
-                                {t('app_title')}
-                            </h1>
-                            <p className="text-xs text-white/80">
-                                {t('app_subtitle')}
-                            </p>
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
+                            <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
                         </div>
+                        <h1 
+                            className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => onNavigate && onNavigate('home')}
+                        >
+                            {t('app_title')}
+                        </h1>
                     </div>
+
                     <div className="flex items-center gap-3">
                         <button
                             onClick={toggleLanguage}
@@ -777,11 +776,12 @@ const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
                             <span className="material-symbols-outlined text-[16px] text-white">language</span>
                             <span>{language === 'es' ? 'EN' : 'ES'}</span>
                         </button>
-                        <button
-                            onClick={getCurrentLocation}
-                            className="h-10 px-4 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-gray-100 transition-colors"
+                        <button 
+                            onClick={() => onNavigate && onNavigate('profile')}
+                            className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
+                            title={t('feed_notifications')}
                         >
-                            {t('my_location')}
+                            <span className="material-symbols-outlined">notifications</span>
                         </button>
                     </div>
                 </div>
