@@ -47,24 +47,27 @@ function App() {
     setCurrentScreen(target as Screen);
   };
 
-  const screenMap: Record<Screen, ReactElement> = {
-    feed: <FeedScreen onNavigate={navigate} />,
-    map: <MapScreen onNavigate={navigate} />,
-    report: <GenerarReporte onNavigate={navigate} />,
-    profile: <ProfileScreen onNavigate={navigate} />,
-    accessibility: <Accesibilidad onNavigate={navigate} />,
-    'route-planner': <PlaneadorDeRuta onNavigate={navigate} />,
-    'active-nav': <NavegacionActiva onNavigate={navigate} />,
-    'success-report': <ReporteExitosoScreen onNavigate={navigate} params={screenParams} />,
-    login: <LoginScreen onNavigate={navigate} />,
-    registro: <RegistroScreen onNavigate={navigate} />,
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'feed': return <FeedScreen onNavigate={navigate} />;
+      case 'map': return <MapScreen onNavigate={navigate} />;
+      case 'report': return <GenerarReporte onNavigate={navigate} />;
+      case 'profile': return <ProfileScreen onNavigate={navigate} />;
+      case 'accessibility': return <Accesibilidad onNavigate={navigate} />;
+      case 'route-planner': return <PlaneadorDeRuta onNavigate={navigate} />;
+      case 'active-nav': return <NavegacionActiva onNavigate={navigate} />;
+      case 'success-report': return <ReporteExitosoScreen onNavigate={navigate} params={screenParams} />;
+      case 'login': return <LoginScreen onNavigate={navigate} />;
+      case 'registro': return <RegistroScreen onNavigate={navigate} />;
+      default: return <FeedScreen onNavigate={navigate} />;
+    }
   };
 
   return (
     // Envolvemos toda la aplicación en el Provider para que los estilos y filtros funcionen en todas las pantallas
     <AccessibilityProvider>
       <LanguageProvider>
-        {screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />}
+        {renderScreen()}
         <ChatAsistente onNavigate={navigate} />
         <Accesibilidad onNavigate={navigate} />
       </LanguageProvider>

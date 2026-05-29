@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent } from 'react';
+import { useLanguage } from './LanguageContext';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -12,6 +13,7 @@ interface ReportPayload {
 }
 
 const ReportScreen = ({ onNavigate }: any) => {
+    const { language, toggleLanguage, t } = useLanguage();
     // Estados para construir nuestro payload
     const [ubicacion, setUbicacion] = useState<string>('Obteniendo ubicación...');
     const [latitude, setLatitude] = useState<number>(32.5149);
@@ -357,22 +359,37 @@ const ReportScreen = ({ onNavigate }: any) => {
         <div className="bg-background text-on-background antialiased flex flex-col h-screen overflow-hidden">
 
             {/* TopAppBar */}
-            <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
+            <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
                 <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
                         </div>
-                        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
-                            Tijuana Sin Barreras
+                        <h1 
+                            className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => onNavigate && onNavigate('home')}
+                        >
+                            {t('app_title')}
                         </h1>
                     </div>
-                    <button 
-                        onClick={() => onNavigate && onNavigate('profile')}
-                        className="text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20"
-                    >
-                        <span className="material-symbols-outlined">notifications</span>
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                        >
+                            <span className="material-symbols-outlined text-[16px] text-white">language</span>
+                            <span>{language === 'es' ? 'EN' : 'ES'}</span>
+                        </button>
+                        <button 
+                            onClick={() => onNavigate && onNavigate('profile')}
+                            className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
+                            title={t('feed_notifications')}
+                        >
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -381,8 +398,8 @@ const ReportScreen = ({ onNavigate }: any) => {
 
                 {/* Header Section */}
                 <div>
-                    <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Reportar barrera</h2>
-                    <p className="font-body-md text-body-md text-on-surface-variant">Ayuda a mejorar la accesibilidad de nuestra ciudad reportando obstáculos.</p>
+                    <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">{t('report_title')}</h2>
+                    <p className="font-body-md text-body-md text-on-surface-variant">{t('report_subtitle')}</p>
                 </div>
 
                 {/* Mostrar mensaje de error si falta la imagen */}
@@ -394,7 +411,7 @@ const ReportScreen = ({ onNavigate }: any) => {
 
                 {/* Foto Section */}
                 <section className="flex flex-col gap-2">
-                    <h3 className="font-label-md text-label-md text-on-surface font-bold">Foto de la barrera <span className="text-error">*</span></h3>
+                    <h3 className="font-label-md text-label-md text-on-surface font-bold">{t('report_photo')} <span className="text-error">*</span></h3>
 
                     {/* Input oculto para galería */}
                     <input
@@ -416,32 +433,37 @@ const ReportScreen = ({ onNavigate }: any) => {
                         ) : (
                             <>
                                 <span className="material-symbols-outlined text-[48px] text-primary mb-2" style={{ fontVariationSettings: "'FILL' 1" }}>photo_camera</span>
-                                <span className="font-label-md text-label-md text-primary">Toca para subir foto o tomar foto</span>
+                                <span className="font-label-md text-label-md text-primary">{t('report_tap_photo')}</span>
                             </>
                         )}
                     </button>
 
                     <p className="font-body-md text-body-md text-[#C8960C] italic flex items-center gap-1 mt-1">
                         <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                        Gemini analizará la foto automáticamente
+                        {t('report_gemini_analyzing')}
                     </p>
                 </section>
 
                 {/* Tipo de barrera Section */}
                 <section className="flex flex-col gap-2">
-                    <h3 className="font-label-md text-label-md text-on-surface font-bold">Tipo de barrera</h3>
+                    <h3 className="font-label-md text-label-md text-on-surface font-bold">{t('report_type')}</h3>
                     <div className="flex flex-wrap gap-2 pb-2">
-                        {['Banqueta rota', 'Sin rampa', 'Obstáculo', 'Vehículo estacionado'].map((tipo) => (
+                        {[
+                            { key: 'Banqueta rota', translationKey: 'report_type_broken_sidewalk' },
+                            { key: 'Sin rampa', translationKey: 'report_type_no_ramp' },
+                            { key: 'Obstáculo', translationKey: 'report_type_obstacle' },
+                            { key: 'Vehículo estacionado', translationKey: 'report_type_parked_car' }
+                        ].map((item) => (
                             <button
-                                key={tipo}
+                                key={item.key}
                                 type="button"
-                                onClick={() => setTipoBarrera(tipo)}
-                                className={`whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md flex items-center justify-center h-[32px] min-w-[48px] touch-target-min transition-colors ${tipoBarrera === tipo
+                                onClick={() => setTipoBarrera(item.key)}
+                                className={`whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md flex items-center justify-center h-[32px] min-w-[48px] touch-target-min transition-colors ${tipoBarrera === item.key
                                     ? 'bg-primary text-on-primary shadow-sm'
                                     : 'bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant'
                                     }`}
                             >
-                                {tipo}
+                                {t(item.translationKey)}
                             </button>
                         ))}
                     </div>
@@ -450,7 +472,7 @@ const ReportScreen = ({ onNavigate }: any) => {
                 {/* Ubicación Section */}
                 <section className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
-                        <h3 className="font-label-md text-label-md text-on-surface font-bold">Ubicación</h3>
+                        <h3 className="font-label-md text-label-md text-on-surface font-bold">{t('report_location')}</h3>
                         <button className="font-label-md text-label-md text-primary font-bold hover:underline touch-target-min px-2 py-1">Cambiar</button>
                     </div>
                     <div className="rounded-xl overflow-hidden relative h-[200px] bg-surface-container border border-outline-variant">
@@ -464,23 +486,23 @@ const ReportScreen = ({ onNavigate }: any) => {
                                     progress_activity
                                 </span>
                                 <span className="font-label-md text-label-md text-on-surface-variant font-medium animate-pulse">
-                                    Obteniendo ubicación precisa...
+                                    {t('report_obtaining_loc')}
                                 </span>
                             </div>
                         )}
                     </div>
                     <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-1">
                         <span className="material-symbols-outlined text-[16px]">my_location</span>
-                        {ubicacion === 'Obteniendo ubicación...' ? ubicacion : `Coordenadas: ${ubicacion}`}
+                        {ubicacion === 'Obteniendo ubicación...' ? t('report_obtaining_loc') : `Coordenadas: ${ubicacion}`}
                     </p>
                 </section>
 
                 {/* Descripción Section */}
                 <section className="flex flex-col gap-2">
-                    <h3 className="font-label-md text-label-md text-on-surface font-bold">Descripción (Opcional)</h3>
+                    <h3 className="font-label-md text-label-md text-on-surface font-bold">{t('report_desc')}</h3>
                     <textarea
                         className="w-full min-h-[100px] bg-surface rounded-xl border border-outline p-3 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary resize-y touch-target-min outline-none"
-                        placeholder="Añade más detalles sobre la barrera..."
+                        placeholder={t('report_desc_placeholder')}
                         value={descripcion}
                         onChange={(e) => setDescripcion(e.target.value)}
                     ></textarea>
@@ -496,12 +518,12 @@ const ReportScreen = ({ onNavigate }: any) => {
                         {isLoading ? (
                             <>
                                 <span className="material-symbols-outlined animate-spin">sync</span>
-                                Enviando...
+                                {t('report_sending')}
                             </>
                         ) : (
                             <>
                                 <span className="material-symbols-outlined">send</span>
-                                Enviar reporte
+                                {t('report_send_btn')}
                             </>
                         )}
                     </button>

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useLanguage } from './LanguageContext';
 
 const ProfileScreen = ({ onNavigate }: any) => {
+    const { language, toggleLanguage, t } = useLanguage();
     // Obtener datos del usuario desde localStorage
     const savedUser = localStorage.getItem('usuario');
     const user = savedUser ? JSON.parse(savedUser) : null;
@@ -32,22 +34,37 @@ const ProfileScreen = ({ onNavigate }: any) => {
         <div className="bg-surface text-on-surface font-body-md text-body-md antialiased md:max-w-[1024px] md:mx-auto relative min-h-screen pb-20">
 
             {/* TopAppBar */}
-            <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
+            <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
                 <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
                         </div>
-                        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
-                            Tijuana Sin Barreras
+                        <h1 
+                            className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => onNavigate && onNavigate('home')}
+                        >
+                            {t('app_title')}
                         </h1>
                     </div>
-                    <button 
-                        onClick={() => onNavigate && onNavigate('profile')}
-                        className="text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20"
-                    >
-                        <span className="material-symbols-outlined">notifications</span>
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                        >
+                            <span className="material-symbols-outlined text-[16px] text-white">language</span>
+                            <span>{language === 'es' ? 'EN' : 'ES'}</span>
+                        </button>
+                        <button 
+                            onClick={() => onNavigate && onNavigate('profile')}
+                            className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
+                            title={t('feed_notifications')}
+                        >
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -67,25 +84,25 @@ const ProfileScreen = ({ onNavigate }: any) => {
                 <section className="px-margin-mobile grid grid-cols-3 gap-4">
                     <div className="bg-surface-container rounded-xl p-4 flex flex-col items-center justify-center border border-outline-variant/30 text-center shadow-sm">
                         <span className="font-headline-lg-mobile text-headline-lg-mobile text-primary">12</span>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">reportes</span>
+                        <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">{t('profile_reports')}</span>
                     </div>
                     <div className="bg-surface-container rounded-xl p-4 flex flex-col items-center justify-center border border-outline-variant/30 text-center shadow-sm">
                         <span className="font-headline-lg-mobile text-headline-lg-mobile text-primary">8</span>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">rutas</span>
+                        <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">{t('profile_routes')}</span>
                     </div>
                     <div className="bg-surface-container rounded-xl p-4 flex flex-col items-center justify-center border border-outline-variant/30 text-center shadow-sm">
                         <span className="material-symbols-outlined text-primary mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>
                             star
                         </span>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant leading-tight">
-                            Nivel<br />Ciudadano
+                        <span className="font-label-sm text-label-sm text-on-surface-variant leading-tight whitespace-pre-line">
+                            {t('profile_citizen_level')}
                         </span>
                     </div>
                 </section>
 
                 {/* Mis reportes recientes */}
                 <section className="px-margin-mobile mt-2">
-                    <h3 className="font-label-md text-label-md text-on-surface mb-4">Mis reportes recientes</h3>
+                    <h3 className="font-label-md text-label-md text-on-surface mb-4">{t('profile_recent_reports')}</h3>
                     <div className="flex flex-col gap-3">
 
                         {/* Report Card 1 */}
@@ -96,12 +113,12 @@ const ProfileScreen = ({ onNavigate }: any) => {
                                 style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNihKGzZa5dmOpVaH-qdcmPm8Jd2C7hS9yKXwsBPlrQQfd9OTn-CqjfN7WxTKc-JXoPn3vJuDgEGpLbvzgfzzEChWleEP-y2xkHa0nfMHqSnnuHvqWCJRIXztBsr02wUUF-aLZ3sYmXCfXD5OeLNGwmmF49NMYsGW5LXGkf2QZlBONQtbvxZd8yFlphzfW3gr88ZMzU4QgEU_c4ldwirFb-TyWwiNhNXrDT2S7kBVr82QTZ5GFBZzcF2eUAgPbueSVOc5kEgI49ZE')" }}
                             ></div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-body-md text-body-md text-on-surface truncate">Banqueta Rota</h4>
+                                <h4 className="font-body-md text-body-md text-on-surface truncate">{t('report_type_broken_sidewalk')}</h4>
                                 <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">12 Oct 2023</p>
                             </div>
                             <div className="flex-shrink-0">
                                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm">
-                                    Verificado
+                                    {t('status_verified')}
                                 </span>
                             </div>
                         </div>
@@ -114,12 +131,12 @@ const ProfileScreen = ({ onNavigate }: any) => {
                                 style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXVGgmCNZuQJmLFHAreMziNDotQK3HLvSZHSDn-49OLlN364WGSf8JkouOmYDK8nAGmP1IlJzY54-z5oqSbIWQHySSi2qT-tw43Tgt-2KFTS5vDiivAXTB56hupt7nEfaTzYZ8tpxI-OV8rDq5EKNFvoNxtsP1SbMmDgm4wpCAo3SAIiwZ__-2Xr2mSnm3R_z9tE4ZTohTb1nCn6TkHXCI-bOnmg2CuGBe5iQfT_u5Cg-AFAhIKKBJ4QMRROgsZIXZtsGJ7-C4wDo')" }}
                             ></div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-body-md text-body-md text-on-surface truncate">Rampa Obstruida</h4>
+                                <h4 className="font-body-md text-body-md text-on-surface truncate">{t('report_type_no_ramp')}</h4>
                                 <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">08 Oct 2023</p>
                             </div>
                             <div className="flex-shrink-0">
                                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-label-sm">
-                                    Pendiente
+                                    {t('status_pending')}
                                 </span>
                             </div>
                         </div>
@@ -129,13 +146,13 @@ const ProfileScreen = ({ onNavigate }: any) => {
 
                 {/* Configuración */}
                 <section className="px-margin-mobile mt-2 mb-8">
-                    <h3 className="font-label-md text-label-md text-on-surface mb-4">Configuración</h3>
+                    <h3 className="font-label-md text-label-md text-on-surface mb-4">{t('profile_config')}</h3>
                     <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm flex flex-col">
 
                         <button className="w-full flex items-center justify-between p-4 min-h-[52px] border-b border-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-colors text-left focus:outline-none">
                             <div className="flex items-center gap-4">
                                 <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-                                <span className="font-body-md text-body-md text-on-surface">Notificaciones</span>
+                                <span className="font-body-md text-body-md text-on-surface">{t('profile_notifications')}</span>
                             </div>
                             <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
                         </button>
@@ -143,7 +160,7 @@ const ProfileScreen = ({ onNavigate }: any) => {
                         <button className="w-full flex items-center justify-between p-4 min-h-[52px] border-b border-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-colors text-left focus:outline-none">
                             <div className="flex items-center gap-4">
                                 <span className="material-symbols-outlined text-on-surface-variant">language</span>
-                                <span className="font-body-md text-body-md text-on-surface">Idioma</span>
+                                <span className="font-body-md text-body-md text-on-surface">{t('profile_language')}</span>
                             </div>
                             <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
                         </button>
@@ -151,7 +168,7 @@ const ProfileScreen = ({ onNavigate }: any) => {
                         <button className="w-full flex items-center justify-between p-4 min-h-[52px] border-b border-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-colors text-left focus:outline-none">
                             <div className="flex items-center gap-4">
                                 <span className="material-symbols-outlined text-on-surface-variant">lock</span>
-                                <span className="font-body-md text-body-md text-on-surface">Privacidad</span>
+                                <span className="font-body-md text-body-md text-on-surface">{t('profile_privacy')}</span>
                             </div>
                             <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
                         </button>
@@ -159,7 +176,7 @@ const ProfileScreen = ({ onNavigate }: any) => {
                         <button className="w-full flex items-center justify-between p-4 min-h-[52px] border-b border-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-colors text-left focus:outline-none">
                             <div className="flex items-center gap-4">
                                 <span className="material-symbols-outlined text-on-surface-variant">info</span>
-                                <span className="font-body-md text-body-md text-on-surface">Acerca de</span>
+                                <span className="font-body-md text-body-md text-on-surface">{t('profile_about')}</span>
                             </div>
                             <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
                         </button>
@@ -171,7 +188,7 @@ const ProfileScreen = ({ onNavigate }: any) => {
                         >
                             <div className="flex items-center gap-4">
                                 <span className="material-symbols-outlined text-error">logout</span>
-                                <span className="font-body-md text-body-md text-error">Cerrar sesión</span>
+                                <span className="font-body-md text-body-md text-error">{t('profile_logout')}</span>
                             </div>
                         </button>
 
