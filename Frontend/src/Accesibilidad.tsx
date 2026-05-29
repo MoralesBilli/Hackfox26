@@ -300,11 +300,11 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                     style={{
                         background: settings.voiceNavigation
                             ? 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)'
-                            : 'linear-gradient(135deg, #6C63FF 0%, #3F3D9E 100%)',
+                            : 'linear-gradient(135deg, #8A1C1C 0%, #5E0000 100%)',
                         color: '#fff',
                         boxShadow: settings.voiceNavigation
                             ? '0 4px 20px rgba(239,68,68,0.4)'
-                            : '0 4px 20px rgba(108,99,255,0.4)',
+                            : '0 4px 20px rgba(102,0,0,0.4)',
                     }}
                     onClick={() => setIsOpen(true)}
                 >
@@ -541,7 +541,7 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                 }
                 input[type=range]::-webkit-slider-thumb {
                     appearance: none; width: 22px; height: 22px;
-                    background: #6C63FF; border-radius: 50%; cursor: pointer;
+                    background: #660000; border-radius: 50%; cursor: pointer;
                     box-shadow: 0 1px 4px rgba(0,0,0,0.25); border: 2px solid white;
                 }
                 input[type=range] { height: 22px; }

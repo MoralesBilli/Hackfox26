@@ -266,7 +266,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
             {/* TopAppBar */}
             <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
-                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[1200px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
@@ -299,7 +299,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 </div>
             </header>
 
-            <main className="max-w-[920px] mx-auto w-full pb-32">
+            <main className="max-w-[1200px] mx-auto w-full pb-32">
                 <div className="flex flex-col md:flex-row gap-8 items-start mt-6">
 
                     {/* Panel de Simbología de Colores (Izquierda - Solo Desktop) */}
@@ -377,7 +377,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                     </aside>
 
                     {/* Contenido Central: Feed y Filtros */}
-                    <div className="flex-grow max-w-[620px] w-full flex flex-col gap-4">
+                    <div className="flex-grow max-w-[850px] w-full flex flex-col gap-4">
                         {/* Story-style Filters */}
                         <section className="py-2 overflow-x-auto hide-scrollbar whitespace-nowrap px-margin-mobile md:px-0 flex gap-4 w-full">
                             <button

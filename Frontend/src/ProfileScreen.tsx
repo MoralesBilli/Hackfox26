@@ -31,11 +31,11 @@ const ProfileScreen = ({ onNavigate }: any) => {
     };
 
     return (
-        <div className="bg-surface text-on-surface font-body-md text-body-md antialiased md:max-w-[1024px] md:mx-auto relative min-h-screen pb-20">
+        <div className="bg-background text-on-background min-h-screen">
 
             {/* TopAppBar */}
             <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
-                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[1200px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
@@ -69,7 +69,8 @@ const ProfileScreen = ({ onNavigate }: any) => {
             </header>
 
             {/* Main Content Canvas */}
-            <main className="flex flex-col gap-6 pt-4">
+            <main className="max-w-[1200px] mx-auto w-full pb-32">
+                <div className="flex flex-col gap-6 pt-4 px-margin-mobile md:px-0">
 
                 {/* Profile Header Area */}
                 <section className="px-margin-mobile flex flex-col items-center pt-4 pb-2">
@@ -194,59 +195,33 @@ const ProfileScreen = ({ onNavigate }: any) => {
 
                     </div>
                 </section>
-            </main>
+            </div></main>
 
             {/* BottomNavBar */}
-            <nav className="fixed bottom-0 w-full h-14 z-50 flex justify-around items-center px-margin-mobile bg-surface shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-outline-variant/30 md:hidden pb-safe">
-
-                <button onClick={() => onNavigate('home')} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
-                    <span className="material-symbols-outlined mb-1 text-[24px]">home</span>
-                    <span className="font-label-sm text-label-sm">Inicio</span>
-                </button>
-
-                <button onClick={() => onNavigate('map')} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
-                    <span className="material-symbols-outlined mb-1 text-[24px]">map</span>
-                    <span className="font-label-sm text-label-sm">Mapa</span>
-                </button>
-
-                <button onClick={() => onNavigate('report')} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
-                    <span className="material-symbols-outlined mb-1 text-[24px]">add_circle</span>
-                    <span className="font-label-sm text-label-sm">Reportar</span>
-                </button>
-
-                {/* Pestaña Activa: Perfil */}
-                <button onClick={() => onNavigate('profile')} className="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
-                    <span className="material-symbols-outlined mb-1 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        person
-                    </span>
-                    <span className="font-label-sm text-label-sm">Perfil</span>
-                </button>
-
-            </nav>
             <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('home')}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >
                     <span className="material-symbols-outlined">home</span>
                 </button>
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('map')}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >
                     <span className="material-symbols-outlined">explore</span>
                 </button>
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('report')}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >
                     <span className="material-symbols-outlined">add_circle</span>
                 </button>
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('profile')}
-                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                    className="flex items-center justify-center text-primary font-bold w-12 h-12 bg-surface-variant/30 rounded-full transition-all duration-200 active:scale-90"
                 >
-                    <span className="material-symbols-outlined">person</span>
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
                 </button>
             </nav>
 

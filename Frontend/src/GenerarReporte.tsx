@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent } from 'react';
+import { useLanguage } from './LanguageContext';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -12,6 +13,7 @@ interface ReportPayload {
 }
 
 const ReportScreen = ({ onNavigate }: any) => {
+    const { language, toggleLanguage, t } = useLanguage();
     // Estados para construir nuestro payload
     const [ubicacion, setUbicacion] = useState<string>('Obteniendo ubicación...');
     const [latitude, setLatitude] = useState<number>(32.5149);
@@ -354,30 +356,46 @@ const ReportScreen = ({ onNavigate }: any) => {
     };
 
     return (
-        <div className="bg-background text-on-background antialiased flex flex-col h-screen overflow-hidden">
+        <div className="bg-background text-on-background min-h-screen">
 
             {/* TopAppBar */}
-            <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
-                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
+            <header className="bg-primary text-on-primary border-b border-primary/20 docked full-width top-0 sticky z-50 shadow-md">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[1200px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="https://res.cloudinary.com/dakdmsfij/image/upload/v1780066088/logo_r8u3dl.png" />
                         </div>
-                        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
-                            Tijuana Sin Barreras
+                        <h1 
+                            className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => onNavigate && onNavigate('home')}
+                        >
+                            {t('app_title')}
                         </h1>
                     </div>
-                    <button 
-                        onClick={() => onNavigate && onNavigate('profile')}
-                        className="text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20"
-                    >
-                        <span className="material-symbols-outlined">notifications</span>
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white hover:bg-white/20 active:scale-95 transition-all cursor-pointer"
+                            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                        >
+                            <span className="material-symbols-outlined text-[16px] text-white">language</span>
+                            <span>{language === 'es' ? 'EN' : 'ES'}</span>
+                        </button>
+                        <button 
+                            onClick={() => onNavigate && onNavigate('profile')}
+                            className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
+                            title={t('feed_notifications')}
+                        >
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
             {/* Main Scrollable Content */}
-            <main className="flex-grow overflow-y-auto pb-24 px-margin-mobile pt-6 flex flex-col gap-6">
+            <main className="max-w-[1200px] mx-auto w-full pb-32">
+                <div className="flex flex-col gap-6 pt-6 px-margin-mobile md:px-0">
 
                 {/* Header Section */}
                 <div>
@@ -506,7 +524,7 @@ const ReportScreen = ({ onNavigate }: any) => {
                         )}
                     </button>
                 </div>
-            </main>
+            </div></main>
 
             {/* BottomNavBar */}
             <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">

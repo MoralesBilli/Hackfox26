@@ -84,14 +84,27 @@ const VoiceControl = ({ onNavigate }: { onNavigate: (screen: string) => void }) 
         }
 
         recognition.lang = language === 'es' ? 'es-MX' : 'en-US';
-        recognition.interimResults = false;
+        recognition.interimResults = true;
         recognition.continuous = true;
 
         recognition.onresult = (event: any) => {
             for (let i = event.resultIndex; i < event.results.length; i++) {
-                if (event.results[i].isFinal) {
-                    const transcript = (event.results[i][0].transcript as string).toLowerCase().trim();
-                    handleVoiceCommand(transcript);
+                const transcript = (event.results[i][0].transcript as string).toLowerCase().trim();
+                // Procesa comandos inmediatamente, incluso si el resultado es parcial/intermedio
+                const commandDetected = handleVoiceCommand(transcript);
+                if (commandDetected) {
+                    // Si se detectó y ejecutó un comando válido, detenemos y reiniciamos rápidamente para el siguiente comando
+                    recognition.stop();
+                    setTimeout(() => {
+                        if (recognitionRef.current && isListening) {
+                            try {
+                                recognitionRef.current.start();
+                            } catch (e) {
+                                // Evitar errores si ya está iniciado
+                            }
+                        }
+                    }, 800);
+                    break;
                 }
             }
         };
@@ -102,7 +115,16 @@ const VoiceControl = ({ onNavigate }: { onNavigate: (screen: string) => void }) 
         };
 
         recognition.onend = () => {
-            setIsListening(false);
+            // Si el usuario quería seguir escuchando, reiniciamos automáticamente
+            if (recognitionRef.current && isListening) {
+                try {
+                    recognitionRef.current.start();
+                } catch (e) {
+                    setIsListening(false);
+                }
+            } else {
+                setIsListening(false);
+            }
         };
 
         recognitionRef.current = recognition;
@@ -116,7 +138,7 @@ const VoiceControl = ({ onNavigate }: { onNavigate: (screen: string) => void }) 
         setIsListening(false);
     };
 
-    const handleVoiceCommand = (transcript: string) => {
+    const handleVoiceCommand = (transcript: string): boolean => {
         const names = language === 'es' ? FRIENDLY_NAMES_ES : FRIENDLY_NAMES_EN;
         
         // Primero intenta match exacto
@@ -143,9 +165,9 @@ const VoiceControl = ({ onNavigate }: { onNavigate: (screen: string) => void }) 
                     onNavigate(target);
                 }, 600);
             }
-        } else {
-            showVoiceMsg(t('a11y_voice_not_understood') || 'No entendido');
+            return true;
         }
+        return false;
     };
 
     const showVoiceMsg = (msg: string) => {
