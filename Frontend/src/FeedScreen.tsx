@@ -93,11 +93,11 @@ const formatTimeLocation = (fechaStr: string) => {
     if (!fechaStr) return 'Reciente • Tijuana';
     try {
         const date = new Date(fechaStr);
-        const options: Intl.DateTimeFormatOptions = { 
-            month: 'short', 
-            day: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit' 
+        const options: Intl.DateTimeFormatOptions = {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         };
         return `${date.toLocaleDateString('es-MX', options)} • Tijuana`;
     } catch (e) {
@@ -157,7 +157,7 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
                 <p className="font-body-md text-body-md text-on-surface/90 leading-relaxed">{post.content}</p>
 
                 {post.showMapLink && (
-                    <button 
+                    <button
                         onClick={() => onNavigate && onNavigate('map')}
                         className="flex items-center gap-1.5 text-primary dark:text-primary-fixed-dim hover:underline font-bold transition-all focus:outline-none w-fit"
                     >
@@ -185,7 +185,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 throw new Error(`Error de servidor: ${response.status}`);
             }
             const data = await response.json();
-            
+
             // Mapeo de la respuesta del backend
             const mappedPosts = data.map((tarjeta: any, index: number) => {
                 const isVerified = tarjeta.estado === 'verificado' || tarjeta.estado === 'aprobado';
@@ -193,7 +193,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                     id: tarjeta.id || `report-${index}`,
                     author: 'Reporte Ciudadano',
                     timeLocation: formatTimeLocation(tarjeta.fecha),
-                    
+
                     statusType: isVerified ? 'verified' : 'pending',
                     avatarSrc: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
                     imageSrc: tarjeta.imagen || 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=600&q=80',
@@ -266,10 +266,14 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
                             <img alt="Logo App" className="w-full h-full object-cover" src="src\assets\Sin nombre.png" />
                         </div>
-                        <h1 className="font-app-title text-app-title text-on-primary">
+                        <h1 
+                            className="font-app-title text-app-title text-on-primary cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => onNavigate && onNavigate('home')}
+                        >
                             Tijuana Sin Barreras
                         </h1>
                     </div>
+
                     <button 
                         onClick={() => onNavigate && onNavigate('profile')}
                         className="text-on-primary hover:bg-white/10 active:scale-95 transition-all duration-150 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full cursor-pointer"
@@ -281,18 +285,18 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
             <main className="max-w-[920px] mx-auto w-full pb-32">
                 <div className="flex flex-col md:flex-row gap-8 items-start mt-6">
-                    
+
                     {/* Panel de Simbología de Colores (Izquierda - Solo Desktop) */}
                     <aside className="hidden md:flex flex-col gap-4 w-[260px] shrink-0 sticky top-24 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm transition-all hover:shadow-md duration-300">
                         <div className="flex items-center gap-2 border-b border-outline-variant/10 pb-3">
                             <span className="material-symbols-outlined text-primary text-xl font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>palette</span>
                             <h2 className="font-bold text-sm tracking-wide text-on-surface uppercase">Simbología</h2>
                         </div>
-                        
+
                         <p className="text-xs text-on-surface-variant/90 leading-relaxed font-medium">
                             Identifica los reportes comunitarios y barreras de accesibilidad según su color asignado:
                         </p>
-                        
+
                         <ul className="flex flex-col gap-3.5 mt-2">
                             {/* Accidente Vial */}
                             <li className="flex items-start gap-3 group">
@@ -360,7 +364,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                     <div className="flex-grow max-w-[620px] w-full flex flex-col gap-4">
                         {/* Story-style Filters */}
                         <section className="py-2 overflow-x-auto hide-scrollbar whitespace-nowrap px-margin-mobile md:px-0 flex gap-4 w-full">
-                            <button 
+                            <button
                                 onClick={handleRefresh}
                                 className="hidden md:inline-flex flex-col items-center gap-2 group focus:outline-none"
                             >
@@ -372,7 +376,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Actualizar</span>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => onNavigate && onNavigate('map')}
                                 className="inline-flex flex-col items-center gap-2 group focus:outline-none"
                             >
@@ -397,7 +401,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                     <p className="font-body-md text-on-error-container/90">
                                         Mostrando reportes sin conexión (backend inactivo).
                                     </p>
-                                    <button 
+                                    <button
                                         onClick={fetchLiveReports}
                                         className="px-4 py-1.5 bg-primary text-on-primary rounded-full text-xs font-bold hover:brightness-110 active:scale-95 transition-all"
                                     >
@@ -423,7 +427,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
             </main>
 
             {/* FAB (Añadir Reporte) */}
-            <button 
+            <button
                 onClick={() => onNavigate && onNavigate('report')}
                 className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 transition-transform active:scale-90 hover:brightness-110 focus:outline-none"
             >
@@ -431,29 +435,29 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
             </button>
 
             {/* BottomNavBar */}
-            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50 md:hidden">
-                <button 
+            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">
+                <button
                     onClick={() => {
                         handleRefresh();
                         if (onNavigate) onNavigate('home');
                     }}
-                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                    className="flex items-center justify-center text-primary font-bold w-12 h-12 bg-surface-variant/30 rounded-full transition-all duration-200 active:scale-90"
                 >
-                    <span className="material-symbols-outlined">home</span>
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
                 </button>
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('map')}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >
                     <span className="material-symbols-outlined">explore</span>
                 </button>
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('report')}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >
                     <span className="material-symbols-outlined">add_circle</span>
                 </button>
-                <button 
+                <button
                     onClick={() => onNavigate && onNavigate('profile')}
                     className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
                 >

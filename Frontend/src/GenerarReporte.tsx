@@ -340,7 +340,10 @@ const ReportScreen = ({ onNavigate }: any) => {
             // Limpiar formulario tras éxito
             setImagenBase64('');
             setDescripcion('');
-            onNavigate('success-report');
+            onNavigate('success-report', {
+                reporte: data.reporte,
+                descripcionUsuario: descripcionFinal
+            });
 
         } catch (error: any) {
             console.error('❌ Error:', error);

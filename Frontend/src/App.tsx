@@ -30,8 +30,9 @@ type Screen =
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('feed');
+  const [screenParams, setScreenParams] = useState<any>(null);
 
-  const navigate = (screen: string) => {
+  const navigate = (screen: string, params?: any) => {
     // 'home' redirige al feed principal
     let target = screen === 'home' ? 'feed' : screen;
     
@@ -40,6 +41,7 @@ function App() {
       target = 'login';
     }
     
+    setScreenParams(params || null);
     setCurrentScreen(target as Screen);
   };
 
@@ -51,7 +53,7 @@ function App() {
     accessibility: <Accesibilidad onNavigate={navigate} />,
     'route-planner': <PlaneadorDeRuta onNavigate={navigate} />,
     'active-nav': <NavegacionActiva onNavigate={navigate} />,
-    'success-report': <ReporteExitosoScreen onNavigate={navigate} />,
+    'success-report': <ReporteExitosoScreen onNavigate={navigate} params={screenParams} />,
     login: <LoginScreen onNavigate={navigate} />,
     registro: <RegistroScreen onNavigate={navigate} />,
   };
