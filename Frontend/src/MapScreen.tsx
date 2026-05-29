@@ -104,7 +104,7 @@ function FlyToPlace({
 // COMPONENT
 // ======================================================
 
-const MapScreen = ({ onNavigate }: any) => {
+const MapScreen = () => {
 
     // ======================================================
     // USER LOCATION
@@ -218,48 +218,48 @@ const MapScreen = ({ onNavigate }: any) => {
     // ======================================================
 
     const searchPlace = async () => {
-    if (!search.trim()) return;
+        if (!search.trim()) return;
 
-    try {
-        // Cambiado de /buscar a /buscar_lugar
-        const response = await fetch(
-            `http://127.0.0.1:5000/buscar?q=${encodeURIComponent(search)}`
-        );
+        try {
+            // Cambiado de /buscar a /buscar_lugar
+            const response = await fetch(
+                `http://127.0.0.1:5000/buscar?q=${encodeURIComponent(search)}`
+            );
 
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
 
-        const data = await response.json();
-        
-        // Manejar posibles errores en la respuesta
-        if (data.error) {
-            console.error(data.error);
+            const data = await response.json();
+
+            // Manejar posibles errores en la respuesta
+            if (data.error) {
+                console.error(data.error);
+                setSearchResults([]);
+                return;
+            }
+
+            setSearchResults(data);
+
+            if (data.length > 0) {
+                const place = data[0];
+                const coords: LatLngTuple = [
+                    place.lat,
+                    place.lon
+                ];
+                setSelectedPlace(coords);
+                calculateRoute(coords);
+            } else {
+                // No se encontraron resultados
+                setSearchResults([]);
+            }
+
+        } catch (error) {
+            console.error('Error en la búsqueda:', error);
             setSearchResults([]);
-            return;
+            // Opcional: Mostrar mensaje de error al usuario
         }
-
-        setSearchResults(data);
-
-        if (data.length > 0) {
-            const place = data[0];
-            const coords: LatLngTuple = [
-                place.lat,
-                place.lon
-            ];
-            setSelectedPlace(coords);
-            calculateRoute(coords);
-        } else {
-            // No se encontraron resultados
-            setSearchResults([]);
-        }
-
-    } catch (error) {
-        console.error('Error en la búsqueda:', error);
-        setSearchResults([]);
-        // Opcional: Mostrar mensaje de error al usuario
-    }
-};
+    };
 
     // ======================================================
     // CALCULATE ROUTE
@@ -804,10 +804,7 @@ const MapScreen = ({ onNavigate }: any) => {
 
             <nav className="h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
 
-                <button 
-                    onClick={() => onNavigate && onNavigate('home')}
-                    className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer"
-                >
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
 
                     <span className="material-symbols-outlined">
                         home
@@ -818,28 +815,14 @@ const MapScreen = ({ onNavigate }: any) => {
                     </span>
 
                 </button>
-
-                <button className="flex flex-col items-center justify-center text-primary">
-
-                    <span
-                        className="material-symbols-outlined"
-                        style={{
-                            fontVariationSettings: "'FILL' 1"
-                        }}
-                    >
-                        map
-                    </span>
-
-                    <span className="text-xs font-semibold mt-1">
-                        Mapa
-                    </span>
-
+                <button
+                    onClick={() => onNavigate && onNavigate('map')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">explore</span>
                 </button>
 
-                <button 
-                    onClick={() => onNavigate && onNavigate('report')}
-                    className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer"
-                >
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
 
                     <span className="material-symbols-outlined">
                         add_circle
@@ -851,10 +834,7 @@ const MapScreen = ({ onNavigate }: any) => {
 
                 </button>
 
-                <button 
-                    onClick={() => onNavigate && onNavigate('profile')}
-                    className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer"
-                >
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
 
                     <span className="material-symbols-outlined">
                         person
@@ -865,7 +845,6 @@ const MapScreen = ({ onNavigate }: any) => {
                     </span>
 
                 </button>
-
             </nav>
 
         </div>
