@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class Reporte:
 
-    def __init__(self, id, descripcion, imagen, fecha, ubicacion,hora,tipo,seguridad):
+    def __init__(self, id, descripcion, imagen, fecha, ubicacion, hora, tipo, seguridad):
 
         self.id = id
         self.descripcion = descripcion
@@ -11,7 +11,7 @@ class Reporte:
         self.hora = hora
         self.ubicacion = ubicacion
         self.tipo = tipo
-        self.seguridad
+        self.seguridad = seguridad
 
 
 class TarjetaBase(ABC):
@@ -26,10 +26,11 @@ class Tarjetas(TarjetaBase):
     def __init__(self, reporte):
         self.reporte = reporte
 
-    def creacion_tarjeta(self):
-        
+
+    def crear_tarjeta(self):
+
         tipo = self.reporte.tipo
-        
+
         if tipo == "accidente":
             color = "rojo"
         else:
@@ -43,6 +44,7 @@ class Tarjetas(TarjetaBase):
             'fecha': self.reporte.fecha,
             'ubicacion': self.reporte.ubicacion
         }
+
 
 class FactoryTarjetas:
 
