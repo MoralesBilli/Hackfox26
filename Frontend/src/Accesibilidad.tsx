@@ -19,92 +19,8 @@ const FRIENDLY_NAMES_EN: Record<string, string> = {
     '__911__': '911',
 };
 
-// ─── SpeechRecognition type shim ─────────────────────────────────────────────
-interface ISpeechRecognition extends EventTarget {
-    lang: string;
-    interimResults: boolean;
-    continuous: boolean;
-    start(): void;
-    stop(): void;
-    abort(): void;
-    onresult: ((ev: any) => void) | null;
-    onerror: ((ev: any) => void) | null;
-    onend: (() => void) | null;
-}
-
-function getSpeechRecognition(): ISpeechRecognition | null {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return null;
-    return new SR() as ISpeechRecognition;
-}
-
-// ─── Robust voice command matcher ───────────────────────────────────────────
-const matchVoiceCommand = (text: string): string | null => {
-    const cleanText = text
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // remove accents
-        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "") // remove punctuation
-        .trim();
-
-    console.log("[Voice Control] Cleaned speech input:", cleanText);
-
-    // Emergencia / 911
-    if (
-        cleanText.includes("911") || 
-        cleanText.includes("emergencia") || 
-        cleanText.includes("emergency") ||
-        cleanText.includes("urgencia")
-    ) {
-        return "__911__";
-    }
-
-    // Mapa
-    if (
-        cleanText.includes("mapa") || 
-        cleanText.includes("map") || 
-        cleanText.includes("ubicar") || 
-        cleanText.includes("ubicacion")
-    ) {
-        return "map";
-    }
-
-    // Reportar
-    if (
-        cleanText.includes("reportar") || 
-        cleanText.includes("reporte") || 
-        cleanText.includes("report") || 
-        cleanText.includes("obstaculo") ||
-        cleanText.includes("incidencia")
-    ) {
-        return "report";
-    }
-
-    // Perfil
-    if (
-        cleanText.includes("perfil") || 
-        cleanText.includes("profile") || 
-        cleanText.includes("usuario") || 
-        cleanText.includes("cuenta") ||
-        cleanText.includes("registro") ||
-        cleanText.includes("login")
-    ) {
-        return "profile";
-    }
-
-    // Inicio / Feed / Home
-    if (
-        cleanText.includes("inicio") || 
-        cleanText.includes("feed") || 
-        cleanText.includes("home") || 
-        cleanText.includes("principal") ||
-        cleanText.includes("noticias")
-    ) {
-        return "feed";
-    }
-
-    return null;
-};
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import 'regenerator-runtime/runtime';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) => void }) => {
@@ -113,9 +29,7 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
     const { t, language } = useLanguage();
 
     // Voice states
-    const [isListening, setIsListening] = useState(false);
     const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
-    const [currentSpeechText, setCurrentSpeechText] = useState<string>('');
     const voiceMsgTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Speak voice confirmation
@@ -135,131 +49,85 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
         voiceMsgTimeout.current = setTimeout(() => setVoiceMessage(null), 3500);
     };
 
-    // Continuous voice listener effect
+    // react-speech-recognition hook
+    const {
+        transcript,
+        finalTranscript,
+        listening,
+        resetTranscript,
+        browserSupportsSpeechRecognition
+    } = useSpeechRecognition();
+
+    // Toggle listening based on settings
     useEffect(() => {
-        let recognition: any = null;
-        let shouldRestart = settings.voiceNavigation;
+        if (!browserSupportsSpeechRecognition) return;
 
-        const startSR = () => {
-            if (!shouldRestart) return;
+        if (settings.voiceNavigation && !listening) {
+            SpeechRecognition.startListening({ 
+                continuous: true, 
+                language: language === 'es' ? 'es-MX' : 'en-US' 
+            });
+        } else if (!settings.voiceNavigation && listening) {
+            SpeechRecognition.stopListening();
+            resetTranscript();
+        }
+    }, [settings.voiceNavigation, listening, language, browserSupportsSpeechRecognition, resetTranscript]);
 
-            // Clean up previous instance just in case
-            if (recognition) {
-                try { recognition.abort(); } catch (e) {}
-            }
+    // Manual command matching
+    useEffect(() => {
+        if (!transcript) return;
+        
+        const lowerTranscript = transcript
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
 
-            const newRec = getSpeechRecognition();
-            if (!newRec) {
-                showVoiceMsg(t('a11y_voice_not_supported'));
-                return;
-            }
+        let matchedTarget: string | null = null;
 
-            const recognitionLang = language === 'es' ? 'es-ES' : 'en-US';
-            console.log("[Voice Control] Initializing SpeechRecognition. App Language:", language, "-> Speech lang:", recognitionLang);
-            newRec.lang = recognitionLang;
-            newRec.interimResults = true; // Habilitado para mostrar transcripción en tiempo real
-            newRec.continuous = false; // continuous=false is much more reliable across browsers when combined with auto-restart
-
-            newRec.onresult = (event: any) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const result = event.results[i];
-                    const text = result[0].transcript;
-                    if (result.isFinal) {
-                        finalTranscript += text;
-                    } else {
-                        interimTranscript += text;
-                    }
-                }
-
-                // Actualizar lo que se escucha en tiempo real
-                const displayTranscript = finalTranscript || interimTranscript;
-                setCurrentSpeechText(displayTranscript);
-
-                if (finalTranscript) {
-                    console.log("[Voice Control] Heard final:", finalTranscript);
-                    const target = matchVoiceCommand(finalTranscript);
-                    const names = language === 'es' ? FRIENDLY_NAMES_ES : FRIENDLY_NAMES_EN;
-
-                    if (target) {
-                        if (target === '__911__') {
-                            const msg = (t('a11y_voice_nav_to') || 'Navegando a') + ' 911';
-                            showVoiceMsg(msg);
-                            speakFeedback(msg);
-                            setTimeout(() => {
-                                window.location.href = 'tel:911';
-                            }, 800);
-                        } else {
-                            const msg = (t('a11y_voice_nav_to') || 'Navegando a') + ' ' + names[target];
-                            showVoiceMsg(msg);
-                            speakFeedback(msg);
-                            setTimeout(() => {
-                                setIsOpen(false);
-                                onNavigate(target);
-                            }, 800);
-                        }
-                    } else {
-                        const msg = t('a11y_voice_not_understood') || 'Comando no reconocido. Intenta de nuevo.';
-                        showVoiceMsg(msg);
-                        speakFeedback(msg);
-                    }
-
-                    // Limpiar el texto de debug tras un corto delay
-                    setTimeout(() => {
-                        setCurrentSpeechText('');
-                    }, 2000);
-                }
-            };
-
-            newRec.onerror = (e: any) => {
-                console.log("[Voice Control] Speech recognition error:", e.error);
-                // Si hay error, limpiamos el texto
-                if (e.error === 'no-speech') {
-                    setCurrentSpeechText('');
-                }
-            };
-
-            newRec.onend = () => {
-                setIsListening(false);
-                if (shouldRestart) {
-                    setTimeout(() => {
-                        if (shouldRestart) startSR();
-                    }, 400);
-                }
-            };
-
-            recognition = newRec;
-            try {
-                newRec.start();
-                setIsListening(true);
-            } catch (err) {
-                console.error("[Voice Control] Start error:", err);
-            }
-        };
-
-        if (settings.voiceNavigation) {
-            shouldRestart = true;
-            startSR();
-        } else {
-            shouldRestart = false;
-            setIsListening(false);
-            setCurrentSpeechText('');
-            if (recognition) {
-                try { recognition.abort(); } catch (e) {}
-            }
+        if (/.*(inicio|home|feed|principal|noticias).*/.test(lowerTranscript)) {
+            matchedTarget = 'feed';
+        } else if (/.*(mapa|map|ubicar|ubicacion).*/.test(lowerTranscript)) {
+            matchedTarget = 'map';
+        } else if (/.*(reportar|reporte|report|nuevo|obstaculo|incidencia).*/.test(lowerTranscript)) {
+            matchedTarget = 'report';
+        } else if (/.*(perfil|profile|cuenta|usuario|registro|login).*/.test(lowerTranscript)) {
+            matchedTarget = 'profile';
+        } else if (/.*(emergencia|911|emergency|urgencia).*/.test(lowerTranscript)) {
+            matchedTarget = '__911__';
         }
 
-        return () => {
-            shouldRestart = false;
-            setIsListening(false);
-            setCurrentSpeechText('');
-            if (recognition) {
-                try { recognition.abort(); } catch (e) {}
+        if (matchedTarget) {
+            const names = language === 'es' ? FRIENDLY_NAMES_ES : FRIENDLY_NAMES_EN;
+            
+            if (matchedTarget === '__911__') {
+                const msg = (t('a11y_voice_nav_to') || 'Navegando a') + ' 911';
+                showVoiceMsg(msg);
+                speakFeedback(msg);
+                setTimeout(() => {
+                    window.location.href = 'tel:911';
+                }, 800);
+            } else {
+                const msg = (t('a11y_voice_nav_to') || 'Navegando a') + ' ' + names[matchedTarget];
+                showVoiceMsg(msg);
+                speakFeedback(msg);
+                setTimeout(() => {
+                    setIsOpen(false);
+                    onNavigate(matchedTarget as string);
+                }, 800);
             }
-        };
-    }, [settings.voiceNavigation, language]);
+            resetTranscript();
+        }
+    }, [transcript, language, t, onNavigate]);
+
+    // Fallback if phrase finishes but no match was made
+    useEffect(() => {
+        if (finalTranscript && finalTranscript.trim() !== '') {
+            const msg = t('a11y_voice_not_understood') || 'Comando no reconocido. Intenta de nuevo.';
+            showVoiceMsg(msg + ' (' + finalTranscript + ')');
+            speakFeedback(msg);
+            resetTranscript();
+        }
+    }, [finalTranscript, t, resetTranscript]);
 
     // Close on Escape key
     useEffect(() => {
@@ -318,7 +186,7 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
             )}
 
             {/* Real-time speech transcription debug text (visible outside the modal, directly under the microphone button) */}
-            {!isOpen && settings.voiceNavigation && currentSpeechText && (
+            {!isOpen && settings.voiceNavigation && transcript && (
                 <div 
                     className="fixed left-4 max-w-[200px] p-2 rounded-xl text-center border shadow-lg z-40 text-xs font-medium"
                     style={{
@@ -331,7 +199,7 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
                     }}
                 >
                     <div className="text-[9px] uppercase tracking-wider text-white/50 mb-0.5">Escuchando:</div>
-                    <div className="italic">"{currentSpeechText}"</div>
+                    <div className="italic">"{transcript}"</div>
                 </div>
             )}
 
