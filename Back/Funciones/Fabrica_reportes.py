@@ -32,10 +32,19 @@ class Tarjetas(TarjetaBase):
 
         tipo = self.reporte.tipo
 
-        if tipo == "accidente":
+        if tipo == "accidente_vial":
             color = "rojo"
+        elif tipo == "Problema_peatonal":
+            color=="naranja"
+        elif tipo =="infraestructura_dañada":
+            color="cafe"
+        elif tipo =="emergencia_riesgo":
+            color =="negro"
+        elif tipo == "peligro_discapacidad":
+            color="morado"
         else:
             color = "gris"
+
 
         return {
             'tipo': self.reporte.tipo,
