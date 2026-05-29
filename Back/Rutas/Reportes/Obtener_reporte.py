@@ -16,15 +16,19 @@ def obtener_reportes():
             data = doc.to_dict()
 
             reporte = Reporte(
-                id=doc.id,
-                descripcion=data.get('descripcion'),
-                imagen=data.get('url_imagen'),
-                fecha=data.get('fecha'),
-                ubicacion=data.get('ubicacion'),
-                estado=data.get('estado', 'normal')
+                id_reporte=doc.id_reporte,
+                descripcidescripcion_usuarioon=data.get('descripcion'),
+                url_imagen=data.get('url_imagen'),
+                timestamp=data.get('timestamp'),
+                longitud=data.get('longitud'),
+                latitud=data.get('latitud'),
+                estado=data.get('estado', 'normal'),
+                tipo = data.get('tipo'),
+                severidad = data.get('severidad')
             )
 
             reportes.append(reporte)
+            
 
         return reportes
     except  Exception as e:
