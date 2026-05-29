@@ -6,31 +6,63 @@ from config import FIREBASE_CREDENTIALS, FIREBASE_DB_URL
 from datetime import datetime 
 import uuid
 
-# Cargar credenciales: puede ser una ruta de archivo local o una cadena JSON en la nube
-if FIREBASE_CREDENTIALS.endswith('.json'):
-    # Si la ruta no es absoluta, resolverla de manera absoluta respecto a la raíz del backend
+# ─────────────────────────────────────────────────────────────────────────────
+# Inicialización de Firebase Admin SDK
+#
+# FIREBASE_CREDENTIALS puede ser:
+#   1. Nombre/ruta de un archivo .json  → se usa localmente si el archivo existe
+#   2. Contenido JSON completo como string → se usa en la nube (Render, etc.)
+# ─────────────────────────────────────────────────────────────────────────────
+
+if not FIREBASE_CREDENTIALS:
+    raise ValueError(
+        "La variable de entorno FIREBASE_CREDENTIALS no está definida. "
+        "En local: apúntala al archivo credenciales_firebase.json. "
+        "En producción: pega el contenido JSON completo del archivo de credenciales."
+    )
+
+def _cargar_desde_json_string(valor):
+    """Intenta parsear un string como JSON de credenciales Firebase."""
+    try:
+        cred_dict = json.loads(valor)
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            f"FIREBASE_CREDENTIALS no es una ruta de archivo .json válida ni un JSON bien formado. "
+            f"Detalle: {e}"
+        )
+    if isinstance(cred_dict, dict) and 'private_key' in cred_dict:
+        # Normalizar saltos de línea en la clave PEM (problema común en variables de entorno)
+        cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+    return credentials.Certificate(cred_dict)
+
+
+cred = None
+
+if FIREBASE_CREDENTIALS.strip().endswith('.json'):
+    # Resolver ruta absoluta relativa al directorio raíz del backend
     if not os.path.isabs(FIREBASE_CREDENTIALS):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        cert_path = os.path.join(base_dir, FIREBASE_CREDENTIALS)
+        cert_path = os.path.join(base_dir, FIREBASE_CREDENTIALS.strip())
     else:
-        cert_path = FIREBASE_CREDENTIALS
+        cert_path = FIREBASE_CREDENTIALS.strip()
 
     if os.path.exists(cert_path):
+        # Caso 1: archivo local existe → usarlo directamente
         cred = credentials.Certificate(cert_path)
     else:
-        raise ValueError(f"No se encontró el archivo de credenciales de Firebase en la ruta: {cert_path}")
+        # Caso 2: el valor termina en .json pero el archivo no existe en este entorno
+        # Intentar tratarlo como JSON serializado (configuración en la nube)
+        print(
+            f"[Firebase] Advertencia: el archivo '{cert_path}' no fue encontrado. "
+            "Intentando parsear FIREBASE_CREDENTIALS como JSON serializado..."
+        )
+        cred = _cargar_desde_json_string(FIREBASE_CREDENTIALS)
 else:
-    try:
-        cred_dict = json.loads(FIREBASE_CREDENTIALS)
-        if isinstance(cred_dict, dict) and 'private_key' in cred_dict:
-            cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
-        cred = credentials.Certificate(cred_dict)
-    except Exception as e:
-        raise ValueError(f"FIREBASE_CREDENTIALS no es una ruta de archivo .json válida ni una cadena JSON. Detalle: {e}")
+    # Caso 3: el valor no termina en .json → es JSON serializado directamente
+    cred = _cargar_desde_json_string(FIREBASE_CREDENTIALS)
 
 firebase_admin.initialize_app(cred, {
     'databaseURL': FIREBASE_DB_URL
 })
 
 firestore_db = firestore.client()
-
