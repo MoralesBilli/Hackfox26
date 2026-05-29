@@ -255,7 +255,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
-                            <img alt="Logo App" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80" />
+                            <img alt="Logo App" className="w-full h-full object-cover" src="src\assets\Sin nombre.png" />
                         </div>
                         <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold text-primary dark:text-primary-fixed-dim">
                             Tijuana Sin Barreras
