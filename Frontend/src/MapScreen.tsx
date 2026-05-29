@@ -104,7 +104,7 @@ function FlyToPlace({
 // COMPONENT
 // ======================================================
 
-const MapScreen = () => {
+const MapScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
     // ======================================================
     // USER LOCATION
@@ -802,61 +802,31 @@ const MapScreen = () => {
                 BOTTOM NAVIGATION
             ====================================================== */}
 
-            <nav className="h-16 shrink-0 bg-white border-t border-gray-200 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
-
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
-
-                    <span className="material-symbols-outlined">
-                        home
-                    </span>
-
-                    <span className="text-xs mt-1">
-                        Inicio
-                    </span>
-
+            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">
+                <button 
+                    onClick={() => onNavigate && onNavigate('home')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">home</span>
                 </button>
-
-                <button className="flex flex-col items-center justify-center text-primary">
-
-                    <span
-                        className="material-symbols-outlined"
-                        style={{
-                            fontVariationSettings: "'FILL' 1"
-                        }}
-                    >
-                        map
-                    </span>
-
-                    <span className="text-xs font-semibold mt-1">
-                        Mapa
-                    </span>
-
+                <button 
+                    onClick={() => onNavigate && onNavigate('map')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">explore</span>
                 </button>
-
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
-
-                    <span className="material-symbols-outlined">
-                        add_circle
-                    </span>
-
-                    <span className="text-xs mt-1">
-                        Reportar
-                    </span>
-
+                <button 
+                    onClick={() => onNavigate && onNavigate('report')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">add_circle</span>
                 </button>
-
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
-
-                    <span className="material-symbols-outlined">
-                        person
-                    </span>
-
-                    <span className="text-xs mt-1">
-                        Perfil
-                    </span>
-
+                <button 
+                    onClick={() => onNavigate && onNavigate('profile')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">person</span>
                 </button>
-
             </nav>
 
         </div>
