@@ -12,12 +12,6 @@ import {
 import L, { type LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-type ReportLocation = {
-    id: string;
-    title: string;
-    subtitle: string;
-    position: LatLngTuple;
-};
 
 type RoutePlan = {
     coordinates: LatLngTuple[];
