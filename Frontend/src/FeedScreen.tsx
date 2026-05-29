@@ -114,7 +114,7 @@ const FeedCard = ({ post, onNavigate }: { post: PostData; onNavigate?: any }) =>
             {/* Encabezado */}
             <div className="p-4 flex justify-between items-start gap-2">
                 <div className="flex items-center gap-3">
-                    <img alt="Avatar" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/5" src={post.avatarSrc} />
+                    
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
                             <p className="font-title-md text-title-md leading-tight font-bold text-on-surface">{post.author}</p>
@@ -189,7 +189,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                     id: tarjeta.id || `report-${index}`,
                     author: 'Reporte Ciudadano',
                     timeLocation: formatTimeLocation(tarjeta.fecha),
-                    status: isVerified ? 'Verificado' : 'Pendiente',
+                    
                     statusType: isVerified ? 'verified' : 'pending',
                     avatarSrc: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
                     imageSrc: tarjeta.imagen || 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=600&q=80',
@@ -252,7 +252,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
 
             {/* TopAppBar */}
             <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 docked full-width top-0 sticky z-50">
-                <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto w-full h-16">
+                <div className="flex justify-between items-center px-margin-mobile md:px-0 max-w-[920px] mx-auto w-full h-16">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/25">
                             <img alt="Logo App" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80" />
@@ -270,65 +270,146 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                 </div>
             </header>
 
-            <main className="max-w-max-width mx-auto pb-32">
-                {/* Story-style Filters */}
-                <section className="py-4 overflow-x-auto hide-scrollbar whitespace-nowrap px-margin-mobile flex gap-4">
-                    <button 
-                        onClick={fetchLiveReports}
-                        className="inline-flex flex-col items-center gap-2 group focus:outline-none"
-                    >
-                        <div className="w-16 h-16 rounded-full border-2 border-primary p-0.5 transition-transform group-active:scale-90">
-                            <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <span className="material-symbols-outlined text-3xl">sync</span>
-                            </div>
+            <main className="max-w-[920px] mx-auto w-full pb-32">
+                <div className="flex flex-col md:flex-row gap-8 items-start mt-6">
+                    
+                    {/* Panel de Simbología de Colores (Izquierda - Solo Desktop) */}
+                    <aside className="hidden md:flex flex-col gap-4 w-[260px] shrink-0 sticky top-24 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/20 shadow-sm transition-all hover:shadow-md duration-300">
+                        <div className="flex items-center gap-2 border-b border-outline-variant/10 pb-3">
+                            <span className="material-symbols-outlined text-primary text-xl font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>palette</span>
+                            <h2 className="font-bold text-sm tracking-wide text-on-surface uppercase">Simbología</h2>
                         </div>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Actualizar</span>
-                    </button>
+                        
+                        <p className="text-xs text-on-surface-variant/90 leading-relaxed font-medium">
+                            Identifica los reportes comunitarios y barreras de accesibilidad según su color asignado:
+                        </p>
+                        
+                        <ul className="flex flex-col gap-3.5 mt-2">
+                            {/* Accidente Vial */}
+                            <li className="flex items-start gap-3 group">
+                                <span className="w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-red-200 mt-0.5 shrink-0 shadow-sm animate-pulse"></span>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[13px] text-red-500 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>car_crash</span>
+                                        Accidente Vial
+                                    </span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Choques o bloqueos vehiculares graves en calzada.</span>
+                                </div>
+                            </li>
 
-                    <button 
-                        onClick={() => onNavigate && onNavigate('map')}
-                        className="inline-flex flex-col items-center gap-2 group focus:outline-none"
-                    >
-                        <div className="w-16 h-16 rounded-full border-2 border-outline-variant/60 p-0.5 transition-transform group-active:scale-90">
-                            <div className="w-full h-full rounded-full bg-surface-container flex items-center justify-center text-secondary">
-                                <span className="material-symbols-outlined text-3xl">map</span>
-                            </div>
-                        </div>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Ver Mapa</span>
-                    </button>
-                </section>
+                            {/* Problema Peatonal */}
+                            <li className="flex items-start gap-3 group">
+                                <span className="w-3.5 h-3.5 rounded-full bg-orange-500 border-2 border-orange-200 mt-0.5 shrink-0 shadow-sm"></span>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[13px] text-orange-500 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>directions_walk</span>
+                                        Problema Peatonal
+                                    </span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Obstáculos en banquetas, cruces o semáforos peatonales dañados.</span>
+                                </div>
+                            </li>
 
-                {/* Social Feed */}
-                <div className="flex flex-col gap-6 px-margin-mobile">
-                    {loading ? (
-                        <div className="w-full flex flex-col justify-center items-center py-16 gap-3">
-                            <div className="w-10 h-10 border-4 border-surface-variant border-t-primary rounded-full animate-spin"></div>
-                            <span className="font-label-md text-label-md text-on-surface-variant">Obteniendo reportes comunitarios en tiempo real...</span>
-                        </div>
-                    ) : error ? (
-                        <div className="p-4 bg-error-container/30 border border-error-container rounded-2xl text-center space-y-3">
-                            <p className="font-body-md text-on-error-container/90">
-                                Mostrando reportes sin conexión (backend inactivo).
-                            </p>
+                            {/* Infraestructura Dañada */}
+                            <li className="flex items-start gap-3 group">
+                                <span className="w-3.5 h-3.5 rounded-full bg-amber-800 border-2 border-amber-200 mt-0.5 shrink-0 shadow-sm"></span>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[13px] text-amber-700 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>construction</span>
+                                        Infraestructura
+                                    </span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Baches, escombros abandonados, grietas y aceras rotas.</span>
+                                </div>
+                            </li>
+
+                            {/* Emergencia / Riesgo */}
+                            <li className="flex items-start gap-3 group">
+                                <span className="w-3.5 h-3.5 rounded-full bg-zinc-950 border-2 border-zinc-600 mt-0.5 shrink-0 shadow-sm"></span>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[13px] text-zinc-700 dark:text-zinc-300 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                                        Emergencia / Riesgo
+                                    </span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Cables eléctricos expuestos, incendios o hoyos peligrosos profundos.</span>
+                                </div>
+                            </li>
+
+                            {/* Peligro de Discapacidad */}
+                            <li className="flex items-start gap-3 group">
+                                <span className="w-3.5 h-3.5 rounded-full bg-purple-600 border-2 border-purple-200 mt-0.5 shrink-0 shadow-sm"></span>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[13px] text-purple-600 font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
+                                        Peligro Movilidad
+                                    </span>
+                                    <span className="text-[10px] text-on-surface-variant mt-0.5 leading-normal">Bloqueo de rampas para sillas de ruedas o accesos adaptados.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </aside>
+
+                    {/* Contenido Central: Feed y Filtros */}
+                    <div className="flex-grow max-w-[620px] w-full flex flex-col gap-4">
+                        {/* Story-style Filters */}
+                        <section className="py-2 overflow-x-auto hide-scrollbar whitespace-nowrap px-margin-mobile md:px-0 flex gap-4 w-full">
                             <button 
                                 onClick={fetchLiveReports}
-                                className="px-4 py-1.5 bg-primary text-on-primary rounded-full text-xs font-bold hover:brightness-110 active:scale-95 transition-all"
+                                className="inline-flex flex-col items-center gap-2 group focus:outline-none"
                             >
-                                Reintentar Conexión
+                                <div className="w-16 h-16 rounded-full border-2 border-primary p-0.5 transition-transform group-active:scale-90">
+                                    <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                        <span className="material-symbols-outlined text-3xl">sync</span>
+                                    </div>
+                                </div>
+                                <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Actualizar</span>
                             </button>
-                        </div>
-                    ) : null}
 
-                    {!loading && posts.map((post) => (
-                        <FeedCard key={post.id} post={post} onNavigate={onNavigate} />
-                    ))}
+                            <button 
+                                onClick={() => onNavigate && onNavigate('map')}
+                                className="inline-flex flex-col items-center gap-2 group focus:outline-none"
+                            >
+                                <div className="w-16 h-16 rounded-full border-2 border-outline-variant/60 p-0.5 transition-transform group-active:scale-90">
+                                    <div className="w-full h-full rounded-full bg-surface-container flex items-center justify-center text-secondary">
+                                        <span className="material-symbols-outlined text-3xl">map</span>
+                                    </div>
+                                </div>
+                                <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">Ver Mapa</span>
+                            </button>
+                        </section>
 
-                    {!loading && posts.length === 0 && (
-                        <div className="text-center py-12">
-                            <span className="material-symbols-outlined text-5xl text-on-surface-variant/40">explore_off</span>
-                            <p className="font-label-lg text-on-surface-variant mt-2">No se encontraron reportes activos.</p>
+                        {/* Social Feed */}
+                        <div className="flex flex-col gap-6 px-margin-mobile md:px-0 w-full">
+                            {loading ? (
+                                <div className="w-full flex flex-col justify-center items-center py-16 gap-3">
+                                    <div className="w-10 h-10 border-4 border-surface-variant border-t-primary rounded-full animate-spin"></div>
+                                    <span className="font-label-md text-label-md text-on-surface-variant">Obteniendo reportes comunitarios en tiempo real...</span>
+                                </div>
+                            ) : error ? (
+                                <div className="p-4 bg-error-container/30 border border-error-container rounded-2xl text-center space-y-3">
+                                    <p className="font-body-md text-on-error-container/90">
+                                        Mostrando reportes sin conexión (backend inactivo).
+                                    </p>
+                                    <button 
+                                        onClick={fetchLiveReports}
+                                        className="px-4 py-1.5 bg-primary text-on-primary rounded-full text-xs font-bold hover:brightness-110 active:scale-95 transition-all"
+                                    >
+                                        Reintentar Conexión
+                                    </button>
+                                </div>
+                            ) : null}
+
+                            {!loading && posts.map((post) => (
+                                <FeedCard key={post.id} post={post} onNavigate={onNavigate} />
+                            ))}
+
+                            {!loading && posts.length === 0 && (
+                                <div className="text-center py-12">
+                                    <span className="material-symbols-outlined text-5xl text-on-surface-variant/40">explore_off</span>
+                                    <p className="font-label-lg text-on-surface-variant mt-2">No se encontraron reportes activos.</p>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
+
                 </div>
             </main>
 
