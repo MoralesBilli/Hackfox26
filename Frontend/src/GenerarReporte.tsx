@@ -485,23 +485,31 @@ const ReportScreen = ({ onNavigate }: any) => {
             </main>
 
             {/* BottomNavBar */}
-            <nav className="fixed bottom-0 w-full h-14 z-50 flex justify-around items-center px-margin-mobile bg-surface dark:bg-surface-container text-primary font-label-sm text-label-sm shadow-sm border-t border-outline-variant/20 flex-shrink-0">
-                <a onClick={(e) => { e.preventDefault(); onNavigate('home'); }} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
-                    <span className="material-symbols-outlined mb-1">home</span>
-                    <span>Inicio</span>
-                </a>
-                <a onClick={(e) => { e.preventDefault(); onNavigate('map'); }} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
-                    <span className="material-symbols-outlined mb-1">map</span>
-                    <span>Mapa</span>
-                </a>
-                <a onClick={(e) => { e.preventDefault(); onNavigate('report'); }} className="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min bg-primary/10 rounded-lg" href="#">
-                    <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
-                    <span>Reportar</span>
-                </a>
-                <a onClick={(e) => { e.preventDefault(); onNavigate('profile'); }} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
-                    <span className="material-symbols-outlined mb-1">person</span>
-                    <span>Perfil</span>
-                </a>
+            <nav className="bg-surface/85 backdrop-blur-md border-t border-outline-variant/30 shadow-lg fixed bottom-0 left-0 right-0 w-full flex justify-around items-center px-4 py-2 pb-[env(safe-area-inset-bottom)] z-50">
+                <button
+                    onClick={() => onNavigate && onNavigate('home')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">home</span>
+                </button>
+                <button
+                    onClick={() => onNavigate && onNavigate('map')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">explore</span>
+                </button>
+                <button
+                    onClick={() => onNavigate && onNavigate('report')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">add_circle</span>
+                </button>
+                <button
+                    onClick={() => onNavigate && onNavigate('profile')}
+                    className="flex items-center justify-center text-on-surface-variant w-12 h-12 hover:bg-surface-variant/50 rounded-full transition-all duration-200 active:scale-90"
+                >
+                    <span className="material-symbols-outlined">person</span>
+                </button>
             </nav>
 
             {/* Modal / Bottom Sheet para seleccionar origen de foto */}
