@@ -7,7 +7,7 @@ interface LoginFormData {
     contrasena: string;
 }
 
-const LoginScreen = () => {
+const LoginScreen = ({ onNavigate }: any) => {
     const [formData, setFormData] = useState<LoginFormData>({
         correo: '',
         contrasena: ''
@@ -63,8 +63,8 @@ const LoginScreen = () => {
 
             alert('¡Sesión iniciada con éxito!');
 
-            // Aquí podrías redirigir al usuario al dashboard
-            // window.location.href = '/dashboard';
+            // Aquí redirigimos al usuario al dashboard
+            onNavigate('home');
 
         } catch (error: any) {
             console.error('❌ Error al iniciar sesión:', error);
@@ -80,7 +80,7 @@ const LoginScreen = () => {
             {/* TopAppBar */}
             <header className="bg-primary text-on-primary flex items-start px-4 h-[220px] w-full relative z-10 pt-4 pb-4">
                 <div className="flex items-center w-full h-14">
-                    <button aria-label="Volver" className="w-12 h-12 flex items-center justify-center hover:opacity-90 active:scale-95 transition-transform">
+                    <button onClick={() => onNavigate('onboarding')} aria-label="Volver" className="w-12 h-12 flex items-center justify-center hover:opacity-90 active:scale-95 transition-transform">
                         <span className="material-symbols-outlined text-[24px]">arrow_back</span>
                     </button>
                     <h1 className="font-app-title text-app-title text-on-primary ml-2 truncate">
@@ -216,7 +216,7 @@ const LoginScreen = () => {
                 {/* Register Link */}
                 <div className="mt-8 text-center">
                     <span className="font-body-md text-body-md text-on-surface-variant">¿No tienes cuenta?</span>
-                    <a className="font-label-md text-label-md text-primary hover:underline ml-1 touch-target-min inline-flex items-center justify-center" href="#">
+                    <a onClick={(e) => { e.preventDefault(); onNavigate('registro'); }} className="font-label-md text-label-md text-primary hover:underline ml-1 touch-target-min inline-flex items-center justify-center" href="#">
                         Regístrate
                     </a>
                 </div>

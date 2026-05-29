@@ -1,13 +1,14 @@
 import React from 'react';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ onNavigate }: any) => {
     // Función simulada para cerrar sesión
     const handleLogout = () => {
         const confirmar = window.confirm('¿Estás seguro de que deseas cerrar sesión?');
         if (confirmar) {
             console.log('Cerrando sesión...');
+            localStorage.removeItem('token');
             alert('Sesión cerrada exitosamente');
-            // Aquí iría la lógica para borrar tokens y redirigir a LoginScreen
+            onNavigate('onboarding');
         }
     };
 
@@ -19,7 +20,7 @@ const ProfileScreen = () => {
                 <button
                     aria-label="Volver"
                     className="w-12 h-12 flex items-center justify-center hover:opacity-90 active:scale-95 transition-transform -ml-2 mr-2"
-                    onClick={() => console.log('Volver a la pantalla anterior')}
+                    onClick={() => onNavigate('home')}
                 >
                     <span className="material-symbols-outlined text-on-primary">arrow_back</span>
                 </button>
@@ -159,23 +160,23 @@ const ProfileScreen = () => {
             {/* BottomNavBar */}
             <nav className="fixed bottom-0 w-full h-14 z-50 flex justify-around items-center px-margin-mobile bg-surface shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-outline-variant/30 md:hidden pb-safe">
 
-                <button className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
+                <button onClick={() => onNavigate('home')} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
                     <span className="material-symbols-outlined mb-1 text-[24px]">home</span>
                     <span className="font-label-sm text-label-sm">Inicio</span>
                 </button>
 
-                <button className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
+                <button onClick={() => onNavigate('map')} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
                     <span className="material-symbols-outlined mb-1 text-[24px]">map</span>
                     <span className="font-label-sm text-label-sm">Mapa</span>
                 </button>
 
-                <button className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
+                <button onClick={() => onNavigate('report')} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
                     <span className="material-symbols-outlined mb-1 text-[24px]">add_circle</span>
                     <span className="font-label-sm text-label-sm">Reportar</span>
                 </button>
 
                 {/* Pestaña Activa: Perfil */}
-                <button className="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
+                <button onClick={() => onNavigate('profile')} className="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-variant/20 active:bg-surface-variant/40 transition-all duration-200 w-12 h-12 rounded-lg">
                     <span className="material-symbols-outlined mb-1 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                         person
                     </span>

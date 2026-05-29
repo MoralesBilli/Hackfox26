@@ -9,7 +9,7 @@ interface ReportPayload {
     imagen: string; // Se enviará como Base64
 }
 
-const ReportScreen = () => {
+const ReportScreen = ({ onNavigate }: any) => {
     // Estados para construir nuestro payload
     const [ubicacion, setUbicacion] = useState<string>('Obteniendo ubicación...');
     const [latitude, setLatitude] = useState<number>(32.5149);
@@ -254,10 +254,10 @@ const ReportScreen = () => {
                 throw new Error(data.error || 'Error al enviar el reporte');
             }
 
-            alert("¡Reporte enviado con éxito! Gracias por tu aporte.");
             // Limpiar formulario tras éxito
             setImagenBase64('');
             setDescripcion('');
+            onNavigate('success-report');
 
         } catch (error: any) {
             console.error('❌ Error:', error);
@@ -272,7 +272,7 @@ const ReportScreen = () => {
 
             {/* TopAppBar */}
             <header className="flex items-center px-4 h-14 w-full z-40 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container docked full-width top-0 flat no shadows flex-shrink-0">
-                <button aria-label="Volver" className="flex items-center justify-center w-12 h-12 mr-2 hover:opacity-90 active:scale-95 transition-transform">
+                <button onClick={() => onNavigate('home')} aria-label="Volver" className="flex items-center justify-center w-12 h-12 mr-2 hover:opacity-90 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-[24px]">arrow_back</span>
                 </button>
                 <h1 className="font-headline-lg-mobile text-headline-lg-mobile flex-grow text-on-primary font-app-title text-app-title">
@@ -405,19 +405,19 @@ const ReportScreen = () => {
 
             {/* BottomNavBar */}
             <nav className="fixed bottom-0 w-full h-14 z-50 flex justify-around items-center px-margin-mobile bg-surface dark:bg-surface-container text-primary font-label-sm text-label-sm shadow-sm border-t border-outline-variant/20 flex-shrink-0">
-                <a className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
+                <a onClick={(e) => { e.preventDefault(); onNavigate('home'); }} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
                     <span className="material-symbols-outlined mb-1">home</span>
                     <span>Inicio</span>
                 </a>
-                <a className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
+                <a onClick={(e) => { e.preventDefault(); onNavigate('map'); }} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
                     <span className="material-symbols-outlined mb-1">map</span>
                     <span>Mapa</span>
                 </a>
-                <a className="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min bg-primary/10 rounded-lg" href="#">
+                <a onClick={(e) => { e.preventDefault(); onNavigate('report'); }} className="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min bg-primary/10 rounded-lg" href="#">
                     <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
                     <span>Reportar</span>
                 </a>
-                <a className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
+                <a onClick={(e) => { e.preventDefault(); onNavigate('profile'); }} className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/20 transition-all duration-200 w-16 h-full touch-target-min" href="#">
                     <span className="material-symbols-outlined mb-1">person</span>
                     <span>Perfil</span>
                 </a>

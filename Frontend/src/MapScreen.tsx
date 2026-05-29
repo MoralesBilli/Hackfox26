@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MapScreen = () => {
+const MapScreen = ({ onNavigate }: any) => {
     // Estado para controlar el input de búsqueda del mapa
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -31,21 +31,24 @@ const MapScreen = () => {
             {/* Top Navigation Container (Web - Hidden on Mobile) */}
             <header className="hidden md:flex items-center px-4 h-14 w-full z-40 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container fixed top-0 left-0 right-0 shadow-sm">
                 <div className="flex items-center gap-4 w-full max-w-5xl mx-auto">
-                    <span className="material-symbols-outlined hover:opacity-90 active:scale-95 transition-transform cursor-pointer touch-target-min flex items-center justify-center">
+                    <span 
+                        onClick={() => onNavigate('home')}
+                        className="material-symbols-outlined hover:opacity-90 active:scale-95 transition-transform cursor-pointer touch-target-min flex items-center justify-center"
+                    >
                         arrow_back
                     </span>
                     <h1 className="font-headline-lg text-headline-lg flex-1">Tijuana Sin Barreras</h1>
                     <nav className="flex items-center gap-6">
-                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => e.preventDefault()}>
+                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => { e.preventDefault(); onNavigate('home'); }}>
                             <span className="material-symbols-outlined">home</span>Inicio
                         </a>
-                        <a className="text-on-primary hover:opacity-90 font-label-md text-label-md flex items-center gap-2 border-b-2 border-on-primary pb-1" href="#" onClick={e => e.preventDefault()}>
+                        <a className="text-on-primary hover:opacity-90 font-label-md text-label-md flex items-center gap-2 border-b-2 border-on-primary pb-1" href="#" onClick={e => { e.preventDefault(); onNavigate('map'); }}>
                             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>map</span>Mapa
                         </a>
-                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => e.preventDefault()}>
+                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => { e.preventDefault(); onNavigate('report'); }}>
                             <span className="material-symbols-outlined">add_circle</span>Reportar
                         </a>
-                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => e.preventDefault()}>
+                        <a className="text-on-primary/70 hover:opacity-90 font-label-md text-label-md flex items-center gap-2" href="#" onClick={e => { e.preventDefault(); onNavigate('profile'); }}>
                             <span className="material-symbols-outlined">person</span>Perfil
                         </a>
                     </nav>
@@ -93,7 +96,7 @@ const MapScreen = () => {
                 {/* Search Overlay (Mobile & Desktop Overlay) */}
                 <div className="absolute top-4 left-4 right-4 md:left-auto md:right-auto md:top-20 md:w-96 z-30 flex justify-center w-[calc(100%-32px)]">
                     <div className="bg-surface rounded-full shadow-sm flex items-center w-full max-w-md h-[52px] px-2 border border-surface-variant">
-                        <button className="w-[48px] h-[48px] flex items-center justify-center text-on-surface hover:bg-surface-variant/20 rounded-full transition-colors md:hidden">
+                        <button onClick={() => onNavigate('home')} className="w-[48px] h-[48px] flex items-center justify-center text-on-surface hover:bg-surface-variant/20 rounded-full transition-colors md:hidden">
                             <span className="material-symbols-outlined">arrow_back</span>
                         </button>
                         <input
@@ -110,7 +113,7 @@ const MapScreen = () => {
                 </div>
 
                 {/* FAB for Accessibility (Right aligned, above bottom sheet) */}
-                <button aria-label="Accesibilidad" className="absolute right-4 bottom-[40%] md:bottom-24 w-[56px] h-[56px] bg-primary text-on-primary rounded-full shadow-sm flex items-center justify-center z-30 hover:scale-105 active:scale-95 transition-transform">
+                <button onClick={() => onNavigate('accessibility')} aria-label="Accesibilidad" className="absolute right-4 bottom-[40%] md:bottom-24 w-[56px] h-[56px] bg-primary text-on-primary rounded-full shadow-sm flex items-center justify-center z-30 hover:scale-105 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
                     <span className="sr-only">Accesibilidad</span>
                 </button>
@@ -179,10 +182,10 @@ const MapScreen = () => {
 
                     {/* Action Buttons */}
                     <div className="px-margin-mobile py-4 bg-surface border-t border-surface-variant flex gap-3 shrink-0">
-                        <button className="flex-1 h-[52px] border-2 border-primary text-primary font-label-md text-label-md rounded-lg flex items-center justify-center px-4 hover:bg-primary/5 active:bg-primary/10 transition-colors touch-target-min">
+                        <button onClick={() => onNavigate('route-planner')} className="flex-1 h-[52px] border-2 border-primary text-primary font-label-md text-label-md rounded-lg flex items-center justify-center px-4 hover:bg-primary/5 active:bg-primary/10 transition-colors touch-target-min">
                             Ver ruta accesible
                         </button>
-                        <button className="flex-1 h-[52px] bg-primary text-on-primary font-label-md text-label-md rounded-lg flex items-center justify-center px-4 hover:bg-primary-container hover:text-on-primary-container active:scale-[0.98] transition-all touch-target-min">
+                        <button onClick={() => onNavigate('route-planner')} className="flex-1 h-[52px] bg-primary text-on-primary font-label-md text-label-md rounded-lg flex items-center justify-center px-4 hover:bg-primary-container hover:text-on-primary-container active:scale-[0.98] transition-all touch-target-min">
                             Cómo llegar
                         </button>
                     </div>
@@ -191,19 +194,19 @@ const MapScreen = () => {
 
             {/* BottomNavBar (Mobile) */}
             <nav className="fixed bottom-0 w-full h-14 z-50 flex justify-around items-center px-margin-mobile bg-surface dark:bg-surface-container shadow-sm md:hidden pb-[env(safe-area-inset-bottom)]">
-                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => e.preventDefault()}>
+                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => { e.preventDefault(); onNavigate('home'); }}>
                     <span className="material-symbols-outlined">home</span>
                     <span className="font-label-sm text-label-sm mt-1">Inicio</span>
                 </a>
-                <a className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min transition-all duration-200" href="#" onClick={e => e.preventDefault()}>
+                <a className="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min transition-all duration-200" href="#" onClick={e => { e.preventDefault(); onNavigate('map'); }}>
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>map</span>
                     <span className="font-label-sm text-label-sm mt-1">Mapa</span>
                 </a>
-                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => e.preventDefault()}>
+                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => { e.preventDefault(); onNavigate('report'); }}>
                     <span className="material-symbols-outlined">add_circle</span>
                     <span className="font-label-sm text-label-sm mt-1">Reportar</span>
                 </a>
-                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => e.preventDefault()}>
+                <a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-variant/20 h-full px-2 min-w-[64px] touch-target-min" href="#" onClick={e => { e.preventDefault(); onNavigate('profile'); }}>
                     <span className="material-symbols-outlined">person</span>
                     <span className="font-label-sm text-label-sm mt-1">Perfil</span>
                 </a>

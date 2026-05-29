@@ -1,16 +1,16 @@
 import React from 'react';
 
-const RouteResultScreen = () => {
+const RouteResultScreen = ({ onNavigate }: any) => {
 
     // Función para manejar el inicio de la navegación
     const handleStartNavigation = () => {
         console.log("Iniciando navegación guiada...");
-        alert("¡Navegación iniciada! Redirigiendo a la pantalla de navegación activa.");
-        // Aquí usarías tu enrutador para ir a /navegacion-activa
+        onNavigate('active-nav');
     };
 
     const handleBack = () => {
         console.log("Regresando a la pantalla de planeación de ruta...");
+        onNavigate('route-planner');
     };
 
     return (
@@ -90,6 +90,7 @@ const RouteResultScreen = () => {
 
                 {/* FAB: Accesibilidad */}
                 <button
+                    onClick={() => onNavigate('accessibility')}
                     aria-label="Accesibilidad"
                     className="absolute bottom-6 right-4 w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-primary-container transition-colors z-20 group focus:outline-none"
                 >

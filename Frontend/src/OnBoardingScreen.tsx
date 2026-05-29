@@ -1,4 +1,4 @@
-const OnboardingScreen = () => {
+const OnboardingScreen = ({ onNavigate }: any) => {
     return (
         <div className="bg-surface-container-lowest text-on-surface min-h-screen flex flex-col relative overflow-hidden antialiased selection:bg-primary-container selection:text-on-primary">
 
@@ -34,14 +34,14 @@ const OnboardingScreen = () => {
                 <section className="w-full max-w-sm mt-12 flex flex-col gap-4">
                     <button
                         className="w-full h-[52px] bg-primary text-on-primary rounded-xl font-label-md text-label-md flex items-center justify-center transition-all hover:bg-primary/90 focus:ring-4 focus:ring-primary/20 active:scale-[0.98]"
-                        onClick={() => console.log('Navegar a Iniciar Sesión')}
+                        onClick={() => onNavigate('login')}
                     >
                         Iniciar sesión
                     </button>
 
                     <button
                         className="w-full h-[52px] bg-transparent border-2 border-primary text-primary rounded-xl font-label-md text-label-md flex items-center justify-center transition-all hover:bg-primary/5 focus:ring-4 focus:ring-primary/20 active:scale-[0.98]"
-                        onClick={() => console.log('Navegar a Registro')}
+                        onClick={() => onNavigate('registro')}
                     >
                         Registrarse
                     </button>
@@ -54,7 +54,7 @@ const OnboardingScreen = () => {
                         href="#"
                         onClick={(e) => {
                             e.preventDefault();
-                            console.log('Navegar a Explorar (Dashboard)');
+                            onNavigate('home');
                         }}
                     >
                         Explorar sin cuenta
@@ -70,6 +70,7 @@ const OnboardingScreen = () => {
 
             {/* Floating Accessibility Button */}
             <button
+                onClick={() => onNavigate('accessibility')}
                 aria-label="Opciones de Accesibilidad"
                 className="fixed bottom-margin-mobile right-margin-mobile md:bottom-margin-desktop md:right-margin-desktop h-[56px] px-6 bg-primary text-on-primary rounded-full flex items-center gap-2 shadow-[0px_4px_12px_rgba(0,0,0,0.15)] z-50 transition-transform hover:scale-105 hover:shadow-[0px_6px_16px_rgba(0,0,0,0.2)] focus:outline-none focus:ring-4 focus:ring-primary/30 group"
             >

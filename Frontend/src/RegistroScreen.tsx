@@ -11,7 +11,7 @@ interface FormData {
     confirmarContrasena: string;
 }
 
-const RegistroScreen = () => {
+const RegistroScreen = ({ onNavigate }: any) => {
     // 2. Le decimos a useState que use nuestra interfaz FormData
     const [formData, setFormData] = useState<FormData>({
         nombre: '',
@@ -45,7 +45,8 @@ const RegistroScreen = () => {
 
         const datosParaEnviar = {
             nombre: formData.nombre,
-            apellidos: `${formData.apellidoPa} ${formData.apellidoMa}`.trim(),
+            apellidoPa: formData.apellidoPa,
+            apellidoMa: formData.apellidoMa,
             correo: formData.correo,
             contrasena: formData.contrasena
         };
@@ -86,7 +87,7 @@ const RegistroScreen = () => {
         <div className="min-h-screen bg-background flex flex-col font-body-md text-on-background overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
             {/* TopAppBar */}
             <header className="flex items-center px-4 h-14 w-full z-40 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container sticky top-0 flat">
-                <button aria-label="Volver" className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-90 transition-transform active:scale-95">
+                <button onClick={() => onNavigate('onboarding')} aria-label="Volver" className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-90 transition-transform active:scale-95">
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>arrow_back</span>
                 </button>
                 <h1 className="ml-2 font-app-title text-app-title text-on-primary truncate tracking-tight">Tijuana Sin Barreras</h1>
@@ -237,13 +238,13 @@ const RegistroScreen = () => {
                 <div className="mt-8 text-center">
                     <p className="font-body-md text-body-md text-on-surface-variant">
                         ¿Ya tienes cuenta?
-                        <a className="text-primary font-label-md text-label-md ml-1 hover:underline" href="#">Inicia sesión</a>
+                        <a onClick={(e) => { e.preventDefault(); onNavigate('login'); }} className="text-primary font-label-md text-label-md ml-1 hover:underline cursor-pointer" href="#">Inicia sesión</a>
                     </p>
                 </div>
             </main>
 
             {/* Floating Action Button (Accessibility) */}
-            <button aria-label="Opciones de accesibilidad" className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] z-50 hover:bg-primary-container hover:scale-105 active:scale-95 transition-all group">
+            <button onClick={() => onNavigate('accessibility')} aria-label="Opciones de accesibilidad" className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] z-50 hover:bg-primary-container hover:scale-105 active:scale-95 transition-all group">
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
                 <span className="absolute right-16 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Accesibilidad</span>
             </button>
