@@ -84,28 +84,16 @@ const VoiceControl = ({ onNavigate }: { onNavigate: (screen: string) => void }) 
         }
 
         recognition.lang = language === 'es' ? 'es-MX' : 'en-US';
-        recognition.interimResults = true;
-        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.continuous = false;
 
         recognition.onresult = (event: any) => {
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = (event.results[i][0].transcript as string).toLowerCase().trim();
-                // Procesa comandos inmediatamente, incluso si el resultado es parcial/intermedio
-                const commandDetected = handleVoiceCommand(transcript);
-                if (commandDetected) {
-                    // Si se detectó y ejecutó un comando válido, detenemos y reiniciamos rápidamente para el siguiente comando
-                    recognition.stop();
-                    setTimeout(() => {
-                        if (recognitionRef.current && isListening) {
-                            try {
-                                recognitionRef.current.start();
-                            } catch (e) {
-                                // Evitar errores si ya está iniciado
-                            }
-                        }
-                    }, 800);
-                    break;
-                }
+            const transcript = (event.results[0][0].transcript as string).toLowerCase().trim();
+            const commandDetected = handleVoiceCommand(transcript);
+            
+            if (!commandDetected) {
+                // Si la palabra no es una regla, la ignoramos y la UI mostrará "no entendido", y el onend la reiniciará solita.
+                showVoiceMsg((t('a11y_voice_not_understood') || 'No entendido: ') + transcript);
             }
         };
 
@@ -178,10 +166,9 @@ const VoiceControl = ({ onNavigate }: { onNavigate: (screen: string) => void }) 
 
     return (
         <>
-            {/* Voice Control FAB */}
             <button
                 aria-label="Control de voz"
-                className={`fixed bottom-24 right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-40 transition-all active:scale-90 hover:scale-105 ${
+                className={`fixed bottom-[208px] right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-40 transition-all active:scale-90 hover:scale-105 ${
                     isListening ? 'bg-red-500 animate-pulse' : 'bg-primary'
                 } text-on-primary`}
                 onClick={isListening ? stopListening : startListening}

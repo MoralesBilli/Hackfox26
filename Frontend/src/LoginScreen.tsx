@@ -239,22 +239,6 @@ const LoginScreen = ({ onNavigate }: any) => {
                 </div>
             </main>
 
-            {/* Botón Flotante de Accesibilidad */}
-            <button
-                onClick={() => onNavigate('accessibility')}
-                aria-label="Opciones de Accesibilidad"
-                className="fixed bottom-margin-mobile left-margin-mobile md:left-auto md:right-margin-desktop md:bottom-margin-desktop h-[56px] w-[56px] md:w-auto md:px-6 bg-primary text-on-primary rounded-full flex items-center justify-center md:justify-start gap-2 shadow-[0px_8px_24px_rgba(102,0,0,0.25)] z-50 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/30 group cursor-pointer"
-            >
-                <span
-                    className="material-symbols-outlined text-[24px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                    accessible
-                </span>
-                <span className="hidden md:inline font-bold whitespace-nowrap">
-                    Accesibilidad
-                </span>
-            </button>
         </div>
     );
 };

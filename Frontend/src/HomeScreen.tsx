@@ -124,7 +124,7 @@ const HomeScreen = ({ onNavigate }: any) => {
             <button
                 onClick={() => onNavigate('accessibility')}
                 aria-label="Accesibilidad"
-                className="fixed bottom-[80px] right-4 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] z-40 hover:scale-105 transition-transform group flex-row px-4 gap-2 w-auto min-w-[140px] h-[56px]"
+                className="fixed bottom-[144px] right-4 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] z-40 hover:scale-105 transition-transform group flex-row px-4 gap-2 w-auto min-w-[140px] h-[56px]"
             >
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>accessible</span>
                 <span className="font-label-md font-bold">Accesibilidad</span>

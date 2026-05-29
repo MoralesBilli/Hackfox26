@@ -453,7 +453,7 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
             {/* FAB (Añadir Reporte) */}
             <button
                 onClick={() => onNavigate && onNavigate('report')}
-                className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 transition-transform active:scale-90 hover:brightness-110 focus:outline-none"
+                className="fixed bottom-[144px] right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50 transition-transform active:scale-90 hover:brightness-110 focus:outline-none"
             >
                 <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>add_a_photo</span>
             </button>

@@ -144,7 +144,7 @@ const SuccessScreen = ({ onNavigate, params }: any) => {
             <button
                 onClick={() => onNavigate('accessibility')}
                 aria-label="Accesibilidad"
-                className="fixed bottom-[88px] left-6 md:left-auto md:right-8 md:bottom-8 w-[56px] h-[56px] bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0px_4px_12px_rgba(0,0,0,0.15)] z-50 hover:bg-primary-container transition-transform hover:scale-105 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+                className="fixed bottom-[144px] left-6 md:left-auto md:right-8 md:bottom-8 w-[56px] h-[56px] bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0px_4px_12px_rgba(0,0,0,0.15)] z-50 hover:bg-primary-container transition-transform hover:scale-105 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
             >
                 <span
                     className="material-symbols-outlined text-[24px]"
