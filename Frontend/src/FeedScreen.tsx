@@ -178,10 +178,12 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
     const [posts, setPosts] = useState<PostData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [displayCount, setDisplayCount] = useState(5);
 
     const fetchLiveReports = async () => {
         setLoading(true);
         setError(null);
+        setDisplayCount(5);
         try {
             const response = await fetch(`${apiUrl}/obtener_reportes`);
             if (!response.ok) {
@@ -424,9 +426,18 @@ const FeedScreen = ({ onNavigate }: { onNavigate?: any }) => {
                                 </div>
                             ) : null}
 
-                            {!loading && posts.map((post) => (
+                            {!loading && posts.slice(0, displayCount).map((post) => (
                                 <FeedCard key={post.id} post={post} onNavigate={onNavigate} />
                             ))}
+
+                            {!loading && displayCount < posts.length && (
+                                <button
+                                    onClick={() => setDisplayCount(displayCount + 5)}
+                                    className="mt-4 px-6 py-3 bg-primary text-on-primary rounded-full font-semibold hover:brightness-110 active:scale-95 transition-all w-full"
+                                >
+                                    {'Cargar más'}
+                                </button>
+                            )}
 
                             {!loading && posts.length === 0 && (
                                 <div className="text-center py-12">
