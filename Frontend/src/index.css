@@ -1,12 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+/* Importación de Tailwind v4 y tu configuración */
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
-/* --- COPIADO DEL HTML --- */
-/* Estilos globales rápidos */
-body {
-    min-height: 100dvh;
-    margin: 0;
-    -webkit-tap-highlight-color: transparent;
+/* --- ESTILOS BASE --- */
+@layer base {
+    body {
+        min-height: 100dvh;
+        margin: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+/* --- UTILIDADES DE ACCESIBILIDAD --- */
+@layer utilities {
+
+    /* Efecto Alto Contraste Global: 
+       Sube el contraste general y fuerza un borde negro/blanco a los elementos para mayor definición.
+    */
+    .a11y-high-contrast {
+        filter: contrast(1.4) saturate(1.2);
+    }
+
+    .a11y-high-contrast * {
+        border-color: #000 !important;
+    }
+
+    /* Efecto Reducción de Movimiento:
+       Apaga animaciones, transiciones y scroll suave de golpe en toda la app.
+    */
+    .a11y-reduced-motion * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
 }

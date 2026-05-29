@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
+
+import { AccessibilityProvider } from './AccesibilidadContext';
+
+// Importación de pantallas
 import FeedScreen from './FeedScreen';
 import MapScreen from './MapScreen';
 import GenerarReporte from './GenerarReporte';
 import ProfileScreen from './ProfileScreen';
+// Nota: Asegúrate de que este archivo coincida con el componente que editamos antes (AccessibilityPanelScreen)
 import Accesibilidad from './Accesibilidad';
 import PlaneadorDeRuta from './PlaneadorDeRuta';
 import NavegacionActiva from './NavegacionActiva';
@@ -42,7 +47,12 @@ function App() {
     'success-report': <ReporteExitosoScreen onNavigate={navigate} />,
   };
 
-  return screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />;
+  return (
+    // Envolvemos toda la aplicación en el Provider para que los estilos y filtros funcionen en todas las pantallas
+    <AccessibilityProvider>
+      {screenMap[currentScreen] ?? <FeedScreen onNavigate={navigate} />}
+    </AccessibilityProvider>
+  );
 }
 
-export default App;
+export default App;
