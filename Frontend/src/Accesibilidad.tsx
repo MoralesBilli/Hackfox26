@@ -442,6 +442,22 @@ const AccessibilityFloating = ({ onNavigate }: { onNavigate: (screen: string) =>
 
                             <hr className="border-outline-variant/20" />
 
+                            {/* Mouse Magnifier */}
+                            <section>
+                                <label className="flex items-center justify-between cursor-pointer min-h-[44px]">
+                                    <div className="flex items-center gap-3">
+                                        <span aria-hidden="true" className="material-symbols-outlined text-on-surface-variant">zoom_in</span>
+                                        <div>
+                                            <span className="text-sm text-on-surface">{t('a11y_mouse_magnifier')}</span>
+                                            <span className="block text-[10px] text-on-surface-variant">{t('a11y_mouse_magnifier_desc')}</span>
+                                        </div>
+                                    </div>
+                                    <Switch checked={settings.mouseMagnifier} onChange={(v) => updateSetting('mouseMagnifier', v)} label={t('a11y_mouse_magnifier')} />
+                                </label>
+                            </section>
+
+                            <hr className="border-outline-variant/20" />
+
                             {/* Reduced Motion */}
                             <section>
                                 <label className="flex items-center justify-between cursor-pointer min-h-[44px]">

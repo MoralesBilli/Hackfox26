@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ScreenMagnifier } from './ScreenMagnifier';
 
 export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
 
@@ -11,6 +12,7 @@ export interface AccessibilitySettings {
     dyslexiaFont: boolean;
     colorBlindMode: ColorBlindMode;
     voiceNavigation: boolean;
+    mouseMagnifier: boolean;
 }
 
 interface AccessibilityContextType {
@@ -27,6 +29,7 @@ const defaultSettings: AccessibilitySettings = {
     dyslexiaFont: false,
     colorBlindMode: 'none',
     voiceNavigation: false,
+    mouseMagnifier: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -129,6 +132,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
             `}</style>
 
             {children}
+            <ScreenMagnifier />
         </AccessibilityContext.Provider>
     );
 };

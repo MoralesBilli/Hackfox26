@@ -116,6 +116,10 @@ const translations: Record<Language, Record<string, string>> = {
         a11y_voice_nav_to: 'Navegando a: ',
         a11y_voice_not_understood: 'No entendí el comando. Intenta de nuevo.',
         a11y_voice_not_supported: 'Tu navegador no soporta reconocimiento de voz.',
+        a11y_open_panel: 'Abrir panel de accesibilidad',
+        a11y_close_panel: 'Cerrar panel',
+        a11y_mouse_magnifier: 'Lupa en cursor',
+        a11y_mouse_magnifier_desc: 'Lente de aumento que sigue al cursor',
         // Profile Screen
         profile_reports: 'reportes',
         profile_routes: 'rutas',
@@ -147,33 +151,6 @@ const translations: Record<Language, Record<string, string>> = {
         report_sending: 'Enviando reporte...',
         report_send_btn: 'Enviar Reporte',
         report_cancel_btn: 'Cancelar',
-
-        // Accessibility Panel
-        a11y_title: 'Accesibilidad',
-        a11y_text_size: 'Tamaño de texto',
-        a11y_dyslexia: 'Fuente para dislexia',
-        a11y_dyslexia_desc: 'Mejora la legibilidad',
-        a11y_color_blind: 'Ajuste de color (Daltonismo)',
-        a11y_cb_none: 'Por defecto (Sin filtro)',
-        a11y_cb_protanopia: 'Protanopía (Rojo - Verde)',
-        a11y_cb_deuteranopia: 'Deuteranopía (Verde - Rojo)',
-        a11y_cb_tritanopia: 'Tritanopía (Azul - Amarillo)',
-        a11y_cb_achromatopsia: 'Acromatopsia (Escala de grises)',
-        a11y_high_contrast: 'Alto contraste',
-        a11y_reduced_motion: 'Reducir movimiento',
-        a11y_reduced_motion_desc: 'Desactiva animaciones',
-        a11y_voice_assistant: 'Asistente de voz',
-        a11y_voice_assistant_desc: 'Lee elementos al tocarlos',
-        a11y_done: 'Listo',
-        a11y_voice_nav: 'Navegación por voz',
-        a11y_voice_nav_desc: 'Mantiene el micrófono activo para comandos de voz',
-        a11y_voice_listening: 'Escuchando...',
-        a11y_voice_hint: 'Di: "inicio", "mapa", "reportar", "perfil" o "emergencia"',
-        a11y_voice_nav_to: 'Navegando a: ',
-        a11y_voice_not_understood: 'No entendí el comando. Intenta de nuevo.',
-        a11y_voice_not_supported: 'Tu navegador no soporta reconocimiento de voz.',
-        a11y_open_panel: 'Abrir panel de accesibilidad',
-        a11y_close_panel: 'Cerrar panel',
     },
     en: {
         // App / Navigation
@@ -314,6 +291,8 @@ const translations: Record<Language, Record<string, string>> = {
         a11y_voice_not_supported: 'Your browser does not support voice recognition.',
         a11y_open_panel: 'Open accessibility panel',
         a11y_close_panel: 'Close panel',
+        a11y_mouse_magnifier: 'Cursor magnifier',
+        a11y_mouse_magnifier_desc: 'Zoom lens that follows the cursor',
     }
 };
 
